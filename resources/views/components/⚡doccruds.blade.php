@@ -114,7 +114,7 @@ new class extends Component {
 };
 ?>
 
-<div class="min-h-screen bg-slate-950 text-slate-100 font-mono p-6"
+<div class="min-h-screen  font-mono "
      style="font-family: 'JetBrains Mono', 'Fira Code', monospace;">
 
     {{-- Google Fonts --}}

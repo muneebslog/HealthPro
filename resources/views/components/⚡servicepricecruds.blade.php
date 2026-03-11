@@ -169,7 +169,7 @@ new class extends Component {
 };
 ?>
 
-<div class="min-h-screen bg-slate-950 text-slate-100 p-6"
+<div class="min-h-screen"
     style="font-family: 'JetBrains Mono', 'Fira Code', monospace;">
 
     <link
