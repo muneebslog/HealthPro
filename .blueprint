@@ -1,2 +1,47 @@
+created:
+    - database/factories/PatientFactory.php
+    - database/factories/FamilyFactory.php
+    - database/factories/DoctorFactory.php
+    - database/factories/ServiceFactory.php
+    - database/factories/ServicePriceFactory.php
+    - database/factories/InvoiceFactory.php
+    - database/factories/InvoiceServiceFactory.php
+    - database/factories/VisitFactory.php
+    - database/factories/VisitServiceFactory.php
+    - database/factories/QueueFactory.php
+    - database/factories/QueueTokenFactory.php
+    - database/migrations/2026_03_10_143542_create_patients_table.php
+    - database/migrations/2026_03_10_143543_create_families_table.php
+    - database/migrations/2026_03_10_143544_create_doctors_table.php
+    - database/migrations/2026_03_10_143545_create_services_table.php
+    - database/migrations/2026_03_10_143546_create_service_prices_table.php
+    - database/migrations/2026_03_10_143547_create_invoices_table.php
+    - database/migrations/2026_03_10_143548_create_invoice_services_table.php
+    - database/migrations/2026_03_10_143549_create_visits_table.php
+    - database/migrations/2026_03_10_143550_create_visit_services_table.php
+    - database/migrations/2026_03_10_143551_create_queues_table.php
+    - database/migrations/2026_03_10_143552_create_queue_tokens_table.php
+    - app/Models/Patient.php
+    - app/Models/Family.php
+    - app/Models/Doctor.php
+    - app/Models/Service.php
+    - app/Models/ServicePrice.php
+    - app/Models/Invoice.php
+    - app/Models/InvoiceService.php
+    - app/Models/Visit.php
+    - app/Models/VisitService.php
+    - app/Models/Queue.php
+    - app/Models/QueueToken.php
 models:
     User: { name: string, email: string, email_verified_at: 'datetime nullable', password: string, remember_token: 'string nullable', two_factor_secret: 'text nullable', two_factor_recovery_codes: 'text nullable', two_factor_confirmed_at: 'datetime nullable' }
+    Patient: { name: string, gender: 'enum:"male,female"', dob: date, relation_to_head: string, family_id: 'bigInteger foreign:Family.id', relationships: { belongsTo: Family, hasMany: 'Visit, Invoice, QueueToken' } }
+    Family: { phone: string, head_id: 'bigInteger nullable foreign:Patient.id', relationships: { hasMany: Patient, belongsTo: Patient } }
+    Doctor: { name: string, specialization: string, phone: 'string nullable', is_on_payroll: boolean, status: 'enum:"active,left,onleaves"', relationships: { hasMany: 'ServicePrice, VisitService, Queue' } }
+    Service: { name: string, is_standalone: boolean, relationships: { hasMany: 'ServicePrice, VisitService, Queue' } }
+    ServicePrice: { service_id: 'bigInteger foreign:Service.id', doctor_id: 'bigInteger nullable foreign:Doctor.id', price: integer, doctor_share: 'integer nullable', hospital_share: integer, relationships: { belongsTo: 'Service, Doctor', hasMany: InvoiceService } }
+    Invoice: { patient_id: 'bigInteger foreign:Patient.id', visit_id: 'bigInteger foreign:Visit.id', total_amount: integer, status: 'enum:"unpaid,paid,partialpaid"', relationships: { belongsTo: 'Patient, Visit', hasMany: InvoiceService } }
+    InvoiceService: { serviceprice_id: 'bigInteger foreign:ServicePrice.id', invoice_id: 'bigInteger foreign:Invoice.id', price: integer, discount: integer, final_amount: integer, relationships: { belongsTo: 'ServicePrice, Invoice' } }
+    Visit: { patient_id: 'bigInteger foreign:Patient.id', status: 'enum:"reserved,confirmed,completed,cancelled"', relationships: { belongsTo: Patient, hasMany: 'VisitService, QueueToken', hasOne: Invoice } }
+    VisitService: { visit_id: 'bigInteger foreign:Visit.id', service_id: 'bigInteger foreign:Service.id', doctor_id: 'bigInteger foreign:Doctor.id', status: 'enum:"assigned,waiting,inprogress,completed"', relationships: { belongsTo: 'Visit, Service, Doctor' } }
+    Queue: { service_id: 'bigInteger foreign:Service.id', doctor_id: 'bigInteger nullable foreign:Doctor.id', queue_type: 'enum:"continuous,daily,shift"', current_token: integer, status: 'enum:"active,discontinuted"', started_at: timestamp, ended_at: timestamp, relationships: { belongsTo: 'Service, Doctor', hasMany: QueueToken } }
+    QueueToken: { queue_id: 'bigInteger foreign:Queue.id', visit_id: 'bigInteger foreign:Visit.id', patient_id: 'bigInteger foreign:Patient.id', token_number: integer, status: 'enum:"waiting,called,completed,skipped,cancelled"', reserved_at: timestamp, paid_at: timestamp, called_at: timestamp, completed_at: timestamp, relationships: { belongsTo: 'Queue, Visit, Patient' } }
