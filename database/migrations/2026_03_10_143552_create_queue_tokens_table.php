@@ -16,17 +16,17 @@ return new class extends Migration
         Schema::create('queue_tokens', function (Blueprint $table) {
             $table->id();
             $table->bigInteger('queue_id');
-            $table->foreign('queue_id')->references('id')->on('Queue');
+            $table->foreign('queue_id')->references('id')->on('queues');
             $table->bigInteger('visit_id');
-            $table->foreign('visit_id')->references('id')->on('Visit');
+            $table->foreign('visit_id')->references('id')->on('visits');
             $table->bigInteger('patient_id');
-            $table->foreign('patient_id')->references('id')->on('Patient');
+            $table->foreign('patient_id')->references('id')->on('patients');
             $table->integer('token_number');
             $table->enum('status', ["waiting","called","completed","skipped","cancelled"]);
             $table->timestamp('reserved_at');
-            $table->timestamp('paid_at');
-            $table->timestamp('called_at');
-            $table->timestamp('completed_at');
+            $table->timestamp('paid_at')->nullable();
+            $table->timestamp('called_at')->nullable();
+            $table->timestamp('completed_at')->nullable();
             $table->timestamps();
         });
 

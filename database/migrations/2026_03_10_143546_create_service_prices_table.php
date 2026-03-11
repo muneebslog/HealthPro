@@ -16,9 +16,9 @@ return new class extends Migration
         Schema::create('service_prices', function (Blueprint $table) {
             $table->id();
             $table->bigInteger('service_id');
-            $table->foreign('service_id')->references('id')->on('Service');
+            $table->foreign('service_id')->references('id')->on('services');
             $table->bigInteger('doctor_id')->nullable();
-            $table->foreign('doctor_id')->references('id')->on('Doctor');
+            $table->foreign('doctor_id')->references('id')->on('doctors');
             $table->integer('price');
             $table->integer('doctor_share')->nullable();
             $table->integer('hospital_share');

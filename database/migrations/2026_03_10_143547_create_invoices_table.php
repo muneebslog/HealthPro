@@ -16,9 +16,9 @@ return new class extends Migration
         Schema::create('invoices', function (Blueprint $table) {
             $table->id();
             $table->bigInteger('patient_id');
-            $table->foreign('patient_id')->references('id')->on('Patient');
+            $table->foreign('patient_id')->references('id')->on('patients');
             $table->bigInteger('visit_id');
-            $table->foreign('visit_id')->references('id')->on('Visit');
+            $table->foreign('visit_id')->references('id')->on('visits');
             $table->integer('total_amount');
             $table->enum('status', ["unpaid","paid","partialpaid"]);
             $table->timestamps();

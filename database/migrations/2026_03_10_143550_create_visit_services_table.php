@@ -16,11 +16,11 @@ return new class extends Migration
         Schema::create('visit_services', function (Blueprint $table) {
             $table->id();
             $table->bigInteger('visit_id');
-            $table->foreign('visit_id')->references('id')->on('Visit');
+            $table->foreign('visit_id')->references('id')->on('visits');
             $table->bigInteger('service_id');
-            $table->foreign('service_id')->references('id')->on('Service');
+            $table->foreign('service_id')->references('id')->on('services');
             $table->bigInteger('doctor_id');
-            $table->foreign('doctor_id')->references('id')->on('Doctor');
+            $table->foreign('doctor_id')->references('id')->on('doctors');
             $table->enum('status', ["assigned","waiting","inprogress","completed"]);
             $table->timestamps();
         });

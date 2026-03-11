@@ -16,9 +16,7 @@ return new class extends Migration
         Schema::create('families', function (Blueprint $table) {
             $table->id();
             $table->string('phone');
-            $table->bigInteger('head_id')->nullable();
-            $table->foreign('head_id')->references('id')->on('Patient');
-            $table->foreignId('patient_id');
+            $table->unsignedBigInteger('head_id')->nullable();
             $table->timestamps();
         });
 

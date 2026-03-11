@@ -20,7 +20,7 @@ return new class extends Migration
             $table->date('dob');
             $table->string('relation_to_head');
             $table->bigInteger('family_id');
-            $table->foreign('family_id')->references('id')->on('Family');
+            $table->foreign('family_id')->references('id')->on('families');
             $table->timestamps();
         });
 

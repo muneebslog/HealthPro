@@ -16,13 +16,11 @@ return new class extends Migration
         Schema::create('invoice_services', function (Blueprint $table) {
             $table->id();
             $table->bigInteger('serviceprice_id');
-            $table->foreign('serviceprice_id')->references('id')->on('ServicePrice');
-            $table->bigInteger('invoice_id');
-            $table->foreign('invoice_id')->references('id')->on('Invoice');
+            $table->foreignId('service_price_id')->constrained('service_prices');
+            $table->foreignId('invoice_id')->constrained('invoices');
             $table->integer('price');
             $table->integer('discount');
             $table->integer('final_amount');
-            $table->foreignId('service_price_id');
             $table->timestamps();
         });
 

@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('specialization');
             $table->string('phone')->nullable();
             $table->boolean('is_on_payroll');
-            $table->enum('status', ["active","left","onleaves"]);
+            $table->enum('status', ["active","left","on_leave"]);
             $table->timestamps();
         });
 
