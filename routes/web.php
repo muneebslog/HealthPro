@@ -7,6 +7,7 @@ Route::view('/', 'welcome')->name('home');
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');
     Route::livewire('/cruds', 'pages::cruds')->name('cruds');
+    Route::livewire('reception/walkin', 'pages::reception.walkin')->name('reception.walkin');
 });
 
 require __DIR__.'/settings.php';
