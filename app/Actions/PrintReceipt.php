@@ -10,6 +10,7 @@ use App\Printing\ReceiptPrinterConnectorFactory;
 use App\Printing\ReceiptTemplates\DoctorPayoutReceiptTemplate;
 use App\Printing\ReceiptTemplates\InvoiceReceiptTemplate;
 use App\Printing\ReceiptTemplates\ShiftCloseReceiptTemplate;
+use Mike42\Escpos\Printer as EscposPrinter;
 
 class PrintReceipt
 {
@@ -36,6 +37,39 @@ class PrintReceipt
         $port = $printerPort ?? config('printing.default_printer_port', 'COM4');
         $template = new DoctorPayoutReceiptTemplate($payout);
         $this->print('doctor_payout', $template->toEscPosText(), $port, doctorPayoutId: $payout->id);
+    }
+
+    public function printTest(?string $printerPort = null): void
+    {
+        $port = $printerPort ?? config('printing.default_printer_port', 'COM8');
+        $defaultSize = 1;
+
+        $printer = $this->connectorFactory->printer($port);
+        try {
+            $printer->setJustification(EscposPrinter::JUSTIFY_CENTER);
+            $printer->setTextSize($defaultSize + 2, $defaultSize + 2);
+            $printer->setEmphasis(true);
+            $printer->text("HEALTH PRO\n");
+
+            $printer->setTextSize($defaultSize, $defaultSize);
+            $printer->setEmphasis(false);
+            $printer->text('Date: '.now()->format('d M H:i')."   \n");
+
+            $printer->setTextSize($defaultSize + 1, $defaultSize + 1);
+            $printer->setEmphasis(true);
+            $printer->text("PRINTER TEST\n\n");
+
+            $printer->setTextSize($defaultSize, $defaultSize);
+            $printer->setEmphasis(false);
+            $printer->text(str_repeat('-', 32)."\n");
+            $printer->text("If you see this, the printer works.\n");
+            $printer->text(str_repeat('-', 32)."\n");
+
+            $printer->feed(2);
+            $printer->cut();
+        } finally {
+            $printer->close();
+        }
     }
 
     /**

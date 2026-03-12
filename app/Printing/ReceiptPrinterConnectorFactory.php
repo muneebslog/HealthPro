@@ -2,17 +2,16 @@
 
 namespace App\Printing;
 
-use Mike42\Escpos\PrintConnectors\WindowsPrintConnector;
 use Mike42\Escpos\Printer;
 
 class ReceiptPrinterConnectorFactory
 {
     /**
-     * Create a print connector for the given port (e.g. COM4 on Windows).
+     * Create a print connector for the given port (e.g. COM8) or printer name.
      */
-    public function connector(string $port): WindowsPrintConnector
+    public function connector(string $port): WindowsReceiptPrintConnector
     {
-        return new WindowsPrintConnector($port);
+        return new WindowsReceiptPrintConnector($port);
     }
 
     /**

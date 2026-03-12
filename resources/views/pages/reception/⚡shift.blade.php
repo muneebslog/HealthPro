@@ -170,6 +170,55 @@ new class extends Component
 };
 ?>
 
+@placeholder
+    <div class="p-6 space-y-6">
+        <flux:skeleton.group animate="shimmer" class="space-y-6">
+            <flux:skeleton.line class="h-8 w-24" />
+            <flux:card class="p-6">
+                <flux:skeleton.line class="mb-2 w-36" />
+                <flux:skeleton.line class="mb-4 w-3/4" />
+                <flux:skeleton class="h-10 w-24 rounded-lg" />
+            </flux:card>
+            <flux:card class="p-5">
+                <div class="flex justify-between mb-4">
+                    <flux:skeleton.line class="w-44" />
+                    <flux:skeleton class="h-9 w-28 rounded-lg" />
+                </div>
+                <flux:skeleton.line class="mb-3 w-full" />
+                <flux:skeleton.line class="mb-3 w-2/3" />
+                <flux:skeleton.line class="w-1/2" />
+            </flux:card>
+            <flux:card class="p-5">
+                <flux:skeleton.line class="mb-4 w-32" />
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left min-w-[480px]">
+                        <thead>
+                            <tr class="border-b border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/80">
+                                <th class="px-4 py-3 text-xs font-semibold uppercase text-zinc-500 dark:text-zinc-400">Opened</th>
+                                <th class="px-4 py-3 text-xs font-semibold uppercase text-zinc-500 dark:text-zinc-400">Opening cash</th>
+                                <th class="px-4 py-3 text-xs font-semibold uppercase text-zinc-500 dark:text-zinc-400">Opened by</th>
+                                <th class="px-4 py-3 text-xs font-semibold uppercase text-zinc-500 dark:text-zinc-400">Closed</th>
+                                <th class="px-4 py-3 text-xs font-semibold uppercase text-zinc-500 dark:text-zinc-400">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-zinc-100 dark:divide-zinc-700/50">
+                            @foreach (range(1, 5) as $i)
+                                <tr>
+                                    <td class="px-4 py-3"><flux:skeleton.line /></td>
+                                    <td class="px-4 py-3"><flux:skeleton.line class="w-20" /></td>
+                                    <td class="px-4 py-3"><flux:skeleton.line style="width: {{ 40 + $i * 10 }}%" /></td>
+                                    <td class="px-4 py-3"><flux:skeleton.line /></td>
+                                    <td class="px-4 py-3"><flux:skeleton.line class="w-14" /></td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </flux:card>
+        </flux:skeleton.group>
+    </div>
+@endplaceholder
+
 <div class="p-6 space-y-6">
     <flux:heading size="xl" class="text-zinc-900 dark:text-zinc-50">
         {{ __('Shift') }}

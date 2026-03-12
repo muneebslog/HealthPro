@@ -12,7 +12,19 @@ return [
     |
     */
 
-    'default_printer_port' => env('RECEIPT_PRINTER_PORT', 'COM4'),
+    'default_printer_port' => env('RECEIPT_PRINTER_PORT', 'COM8'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Receipt printer name (alternative to port)
+    |--------------------------------------------------------------------------
+    |
+    | Use the Windows printer name (e.g. "Tysso Thermal Receipt Printer") instead
+    | of the COM port. Some USB printers work better with the printer name.
+    |
+    */
+
+    'printer_name' => env('RECEIPT_PRINTER_NAME'),
 
     /*
     |--------------------------------------------------------------------------

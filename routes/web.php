@@ -10,6 +10,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::livewire('/cruds', 'pages::cruds')->name('cruds');
         Route::livewire('tinker', 'pages::tinker')->name('tinker');
         Route::livewire('admin/printed', 'pages::printed')->name('admin.printed');
+        Route::livewire('admin/print-test', 'pages::print-test')->name('admin.print-test');
     });
     Route::livewire('reception/walkin', 'pages::reception.walkin')->name('reception.walkin');
     Route::livewire('reception/appointment', 'pages::reception.appointment')->name('reception.appointment');

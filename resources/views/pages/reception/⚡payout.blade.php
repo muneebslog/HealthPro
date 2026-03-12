@@ -150,6 +150,45 @@ new class extends Component
 };
 ?>
 
+@placeholder
+    <div class="p-6 space-y-6">
+        <flux:skeleton.group animate="shimmer" class="space-y-6">
+            <flux:skeleton.line class="h-8 w-48" />
+            <flux:card class="p-5">
+                <flux:skeleton.line class="mb-2 w-20" />
+                <flux:skeleton class="h-10 w-full rounded-lg" />
+            </flux:card>
+            <flux:card class="p-5 overflow-hidden">
+                <flux:skeleton.line class="mb-4 w-32" />
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left min-w-[640px]">
+                        <thead>
+                            <tr class="border-b border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/80">
+                                <th class="px-4 py-3 text-xs font-semibold uppercase text-zinc-500 dark:text-zinc-400">Date</th>
+                                <th class="px-4 py-3 text-xs font-semibold uppercase text-zinc-500 dark:text-zinc-400">Patient</th>
+                                <th class="px-4 py-3 text-xs font-semibold uppercase text-zinc-500 dark:text-zinc-400">Service</th>
+                                <th class="px-4 py-3 text-xs font-semibold uppercase text-zinc-500 dark:text-zinc-400">Amount</th>
+                                <th class="px-4 py-3 text-xs font-semibold uppercase text-zinc-500 dark:text-zinc-400">Share</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-zinc-100 dark:divide-zinc-700/50">
+                            @foreach (range(1, 5) as $i)
+                                <tr>
+                                    <td class="px-4 py-3"><flux:skeleton.line /></td>
+                                    <td class="px-4 py-3"><flux:skeleton.line style="width: {{ 60 + $i * 8 }}%" /></td>
+                                    <td class="px-4 py-3"><flux:skeleton.line /></td>
+                                    <td class="px-4 py-3"><flux:skeleton.line class="w-16" /></td>
+                                    <td class="px-4 py-3"><flux:skeleton.line class="w-14" /></td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </flux:card>
+        </flux:skeleton.group>
+    </div>
+@endplaceholder
+
 <div class="p-6 space-y-6">
     <flux:heading size="xl" class="text-zinc-900 dark:text-zinc-50">
         {{ __('Doctor payout') }}

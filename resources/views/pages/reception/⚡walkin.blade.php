@@ -541,6 +541,47 @@ new class extends Component
 };
 ?>
 
+@placeholder
+    <div class="p-6 space-y-6">
+        <flux:skeleton.group animate="shimmer" class="space-y-6">
+            <flux:skeleton.line class="h-8 w-56" />
+            <div class="grid gap-6 lg:grid-cols-3">
+                <div class="lg:col-span-2 space-y-6">
+                    <flux:card class="p-5">
+                        <flux:skeleton.line class="mb-4 w-40" />
+                        <flux:skeleton class="h-10 w-full rounded-lg mb-4" />
+                        <div class="flex gap-2">
+                            <flux:skeleton class="h-8 w-24 rounded-full" />
+                            <flux:skeleton class="h-8 w-28 rounded-full" />
+                        </div>
+                    </flux:card>
+                    <flux:card class="p-5">
+                        <flux:skeleton.line class="mb-4 w-44" />
+                        <div class="grid gap-4 sm:grid-cols-2">
+                            <flux:skeleton class="h-10 rounded-lg" />
+                            <flux:skeleton class="h-10 rounded-lg" />
+                        </div>
+                    </flux:card>
+                    <flux:card class="p-5">
+                        <flux:skeleton.line class="mb-4 w-32" />
+                        <flux:skeleton.line class="mb-2 w-full" />
+                        <flux:skeleton.line class="mb-2 w-4/5" />
+                        <flux:skeleton.line class="w-2/3" />
+                    </flux:card>
+                </div>
+                <div>
+                    <flux:card class="p-5">
+                        <flux:skeleton.line class="mb-4 w-36" />
+                        <flux:skeleton.line class="mb-2 w-full" />
+                        <flux:skeleton.line class="mb-4 w-3/4" />
+                        <flux:skeleton class="h-10 w-full rounded-lg" />
+                    </flux:card>
+                </div>
+            </div>
+        </flux:skeleton.group>
+    </div>
+@endplaceholder
+
 <div class="p-6 space-y-6">
     <div class="flex items-center gap-2">
         <flux:heading size="xl">Front Desk Reception</flux:heading>

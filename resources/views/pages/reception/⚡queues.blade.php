@@ -66,6 +66,50 @@ new class extends Component
 };
 ?>
 
+@placeholder
+    <div class="p-6 space-y-6">
+        <flux:skeleton.group animate="shimmer" class="space-y-6">
+            <flux:skeleton.line class="h-8 w-32" />
+            <flux:card class="p-5">
+                <div class="flex gap-2">
+                    <flux:skeleton class="h-9 w-32 rounded-lg" />
+                    <flux:skeleton class="h-9 w-28 rounded-lg" />
+                </div>
+            </flux:card>
+            <flux:card class="overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left min-w-[720px]">
+                        <thead>
+                            <tr class="border-b border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/80">
+                                <th class="px-5 py-4 text-xs font-semibold uppercase text-zinc-500 dark:text-zinc-400">Service</th>
+                                <th class="px-5 py-4 text-xs font-semibold uppercase text-zinc-500 dark:text-zinc-400">Doctor</th>
+                                <th class="px-5 py-4 text-xs font-semibold uppercase text-zinc-500 dark:text-zinc-400">Type</th>
+                                <th class="px-5 py-4 text-xs font-semibold uppercase text-zinc-500 dark:text-zinc-400">Token</th>
+                                <th class="px-5 py-4 text-xs font-semibold uppercase text-zinc-500 dark:text-zinc-400">Status</th>
+                                <th class="px-5 py-4 text-xs font-semibold uppercase text-zinc-500 dark:text-zinc-400">Started</th>
+                                <th class="px-5 py-4 text-xs font-semibold uppercase text-zinc-500 dark:text-zinc-400 w-24"></th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-zinc-100 dark:divide-zinc-700/50">
+                            @foreach (range(1, 6) as $i)
+                                <tr>
+                                    <td class="px-5 py-4"><flux:skeleton.line style="width: {{ 50 + $i * 6 }}%" /></td>
+                                    <td class="px-5 py-4"><flux:skeleton.line /></td>
+                                    <td class="px-5 py-4"><flux:skeleton.line class="w-16" /></td>
+                                    <td class="px-5 py-4"><flux:skeleton.line class="w-8" /></td>
+                                    <td class="px-5 py-4"><flux:skeleton.line class="w-14" /></td>
+                                    <td class="px-5 py-4"><flux:skeleton.line class="w-20" /></td>
+                                    <td class="px-5 py-4"><flux:skeleton.line class="w-16" /></td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </flux:card>
+        </flux:skeleton.group>
+    </div>
+@endplaceholder
+
 <div class="p-6 space-y-6" @if(!$showOlder) wire:poll.5s @endif>
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <flux:heading size="xl" class="text-zinc-900 dark:text-zinc-50">

@@ -472,6 +472,22 @@ new class extends Component
 };
 ?>
 
+@placeholder
+    <div class="p-6 space-y-6">
+        <flux:skeleton.group animate="shimmer" class="space-y-6">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <flux:skeleton.line class="h-8 w-40" />
+                <flux:skeleton class="h-10 w-48 rounded-lg" />
+            </div>
+            <div class="grid grid-cols-5 gap-3">
+                @foreach (range(1, 15) as $i)
+                    <flux:skeleton class="min-h-[100px] rounded-lg" />
+                @endforeach
+            </div>
+        </flux:skeleton.group>
+    </div>
+@endplaceholder
+
 <div class="p-6 space-y-6" wire:poll.5s>
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <flux:heading size="xl">{{ __('Appointments') }}</flux:heading>

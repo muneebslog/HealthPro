@@ -27,6 +27,9 @@
                         <flux:sidebar.item icon="printer" :href="route('admin.printed')" :current="request()->routeIs('admin.printed')" wire:navigate>
                             {{ __('Printed') }}
                         </flux:sidebar.item>
+                        <flux:sidebar.item icon="beaker" :href="route('admin.print-test')" :current="request()->routeIs('admin.print-test')" wire:navigate>
+                            {{ __('Print test') }}
+                        </flux:sidebar.item>
                         <flux:sidebar.item icon="command-line" :href="route('tinker')" :current="request()->routeIs('tinker')" wire:navigate>
                             {{ __('Tinker') }}
                         </flux:sidebar.item>

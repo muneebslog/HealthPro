@@ -87,6 +87,47 @@ new class extends Component
 };
 ?>
 
+@placeholder
+    <div class="p-6 space-y-6">
+        <flux:skeleton.group animate="shimmer" class="space-y-6">
+            <flux:skeleton.line class="h-8 w-28" />
+            <flux:card class="p-5">
+                <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <div><flux:skeleton.line class="mb-2 w-24" /><flux:skeleton class="h-10 w-full rounded-lg" /></div>
+                    <div><flux:skeleton.line class="mb-2 w-28" /><flux:skeleton class="h-10 w-full rounded-lg" /></div>
+                    <div><flux:skeleton.line class="mb-2 w-20" /><flux:skeleton class="h-10 w-full rounded-lg" /></div>
+                </div>
+            </flux:card>
+            <flux:card class="overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left min-w-[720px]">
+                        <thead>
+                            <tr class="border-b border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/80">
+                                <th class="px-5 py-4 text-xs font-semibold uppercase text-zinc-500 dark:text-zinc-400">Date</th>
+                                <th class="px-5 py-4 text-xs font-semibold uppercase text-zinc-500 dark:text-zinc-400">Patient</th>
+                                <th class="px-5 py-4 text-xs font-semibold uppercase text-zinc-500 dark:text-zinc-400">Services</th>
+                                <th class="px-5 py-4 text-xs font-semibold uppercase text-zinc-500 dark:text-zinc-400">Total</th>
+                                <th class="px-5 py-4 text-xs font-semibold uppercase text-zinc-500 dark:text-zinc-400">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-zinc-100 dark:divide-zinc-700/50">
+                            @foreach (range(1, 8) as $i)
+                                <tr>
+                                    <td class="px-5 py-4"><flux:skeleton.line class="w-24" /></td>
+                                    <td class="px-5 py-4"><flux:skeleton.line style="width: {{ 50 + $i * 5 }}%" /></td>
+                                    <td class="px-5 py-4"><flux:skeleton.line class="w-20" /></td>
+                                    <td class="px-5 py-4"><flux:skeleton.line class="w-16" /></td>
+                                    <td class="px-5 py-4"><flux:skeleton.line class="w-20" /></td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </flux:card>
+        </flux:skeleton.group>
+    </div>
+@endplaceholder
+
 <div class="p-6 space-y-6">
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <flux:heading size="xl" class="text-zinc-900 dark:text-zinc-50">

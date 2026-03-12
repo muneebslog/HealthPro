@@ -13,6 +13,21 @@ new class extends Component
 };
 ?>
 
+@placeholder
+    <div class="min-h-screen p-6" style="font-family:'JetBrains Mono','Fira Code',monospace;">
+        <flux:skeleton.group animate="shimmer" class="space-y-6">
+            <div class="flex gap-2 border-b border-zinc-200 dark:border-zinc-700 pb-4">
+                <flux:skeleton class="h-10 w-24 rounded" />
+                <flux:skeleton class="h-10 w-24 rounded" />
+                <flux:skeleton class="h-10 w-20 rounded" />
+            </div>
+            <flux:skeleton.line class="w-full" />
+            <flux:skeleton.line class="w-4/5" />
+            <flux:skeleton.line class="w-3/4" />
+        </flux:skeleton.group>
+    </div>
+@endplaceholder
+
 <div class="min-h-screen " style="font-family:'JetBrains Mono','Fira Code',monospace;">
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 
