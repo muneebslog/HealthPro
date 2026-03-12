@@ -22,18 +22,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 
 
-Route::get('/printer-debug', function () {
-    try {
-        $connector = new \Mike42\Escpos\PrintConnectors\WindowsPrintConnector('Tysso Thermal Receipt Printer');
-        $printer = new \Mike42\Escpos\Printer($connector);
-        $printer->text("TEST\n");
-        $printer->cut();
-        $printer->close();
-        return 'Printed via name OK';
-    } catch (\Throwable $e) {
-        return 'Name failed: ' . $e->getMessage();
-    }
-})->middleware('auth');
+
 
 Route::get('/printer-debug-port', function () {
     try {
