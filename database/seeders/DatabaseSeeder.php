@@ -2,9 +2,11 @@
 
 namespace Database\Seeders;
 
+use App\Models\Doctor;
+use App\Models\Service;
 use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -13,11 +15,29 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        User::firstOrCreate(
+            ['email' => 'admin@hp.com'],
+            array_merge(User::factory()->definition(), [
+                'name' => 'Admin',
+                'email' => 'admin@hp.com',
+                'role' => 'admin',
+                'password' => Hash::make('admin123'),
+            ])
+        );
+
+        Service::firstOrCreate(
+            ['name' => 'consultation'],
+            ['is_standalone' => false]
+        );
+
+        Doctor::firstOrCreate(
+            ['name' => 'MO'],
+            [
+                'specialization' => 'GP',
+                'is_on_payroll' => true,
+                'status' => 'active',
+            ]
+        );
     }
 }

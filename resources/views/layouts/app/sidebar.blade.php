@@ -15,16 +15,23 @@
                     <flux:sidebar.item icon="layout-grid" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
                         {{ __('Dashboard') }}
                     </flux:sidebar.item>
-                    <flux:sidebar.item icon="table-cells" :href="route('cruds')" :current="request()->routeIs('cruds')" wire:navigate>
-                        {{ __('Cruds') }}
-                    </flux:sidebar.item>
+                    @if(auth()->user()?->role === \App\Enums\UserRole::Admin)
+                        <flux:sidebar.item icon="table-cells" :href="route('cruds')" :current="request()->routeIs('cruds')" wire:navigate>
+                            {{ __('Cruds') }}
+                        </flux:sidebar.item>
+                    @endif
                 </flux:sidebar.group>
 
-                <flux:sidebar.group :heading="__('Tools')" class="grid">
-                    <flux:sidebar.item icon="command-line" :href="route('tinker')" :current="request()->routeIs('tinker')" wire:navigate>
-                        {{ __('Tinker') }}
-                    </flux:sidebar.item>
-                </flux:sidebar.group>
+                @if(auth()->user()?->role === \App\Enums\UserRole::Admin)
+                    <flux:sidebar.group :heading="__('Tools')" class="grid">
+                        <flux:sidebar.item icon="printer" :href="route('admin.printed')" :current="request()->routeIs('admin.printed')" wire:navigate>
+                            {{ __('Printed') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item icon="command-line" :href="route('tinker')" :current="request()->routeIs('tinker')" wire:navigate>
+                            {{ __('Tinker') }}
+                        </flux:sidebar.item>
+                    </flux:sidebar.group>
+                @endif
 
                 <flux:sidebar.group :heading="__('Reception')" class="grid">
                     <flux:sidebar.item icon="clock" :href="route('reception.shift')" :current="request()->routeIs('reception.shift')" wire:navigate>
