@@ -25,6 +25,8 @@ class QueueToken extends Model
         'paid_at',
         'called_at',
         'completed_at',
+        'shift_id',
+        'created_by',
     ];
 
     /**
@@ -39,16 +41,28 @@ class QueueToken extends Model
             'queue_id' => 'integer',
             'visit_id' => 'integer',
             'patient_id' => 'integer',
-            'reserved_at' => 'timestamp',
-            'paid_at' => 'timestamp',
-            'called_at' => 'timestamp',
-            'completed_at' => 'timestamp',
+            'shift_id' => 'integer',
+            'created_by' => 'integer',
+            'reserved_at' => 'datetime',
+            'paid_at' => 'datetime',
+            'called_at' => 'datetime',
+            'completed_at' => 'datetime',
         ];
     }
 
     public function queue(): BelongsTo
     {
         return $this->belongsTo(Queue::class);
+    }
+
+    public function shift(): BelongsTo
+    {
+        return $this->belongsTo(Shift::class);
+    }
+
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     public function visit(): BelongsTo

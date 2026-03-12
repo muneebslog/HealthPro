@@ -21,6 +21,8 @@ class Invoice extends Model
         'visit_id',
         'total_amount',
         'status',
+        'shift_id',
+        'created_by',
     ];
 
     /**
@@ -34,6 +36,8 @@ class Invoice extends Model
             'id' => 'integer',
             'patient_id' => 'integer',
             'visit_id' => 'integer',
+            'shift_id' => 'integer',
+            'created_by' => 'integer',
         ];
     }
 
@@ -45,6 +49,16 @@ class Invoice extends Model
     public function visit(): BelongsTo
     {
         return $this->belongsTo(Visit::class);
+    }
+
+    public function shift(): BelongsTo
+    {
+        return $this->belongsTo(Shift::class);
+    }
+
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     public function invoiceServices(): HasMany

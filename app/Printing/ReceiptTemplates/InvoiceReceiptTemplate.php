@@ -1,0 +1,75 @@
+<?php
+
+namespace App\Printing\ReceiptTemplates;
+
+use App\Models\Invoice;
+
+class InvoiceReceiptTemplate extends AbstractReceiptTemplate
+{
+    public function __construct(
+        private readonly Invoice $invoice
+    ) {}
+
+    public function toEscPosText(): string
+    {
+        $invoice = $this->invoice->loadMissing([
+            'visit.queueTokens.queue',
+            'visit.patient.family',
+            'invoiceServices.servicePrice.service',
+            'invoiceServices.servicePrice.doctor',
+        ]);
+
+        $out = $this->header('Invoice');
+
+        $patient = $invoice->visit?->patient;
+        $out .= 'Patient: '.($patient?->name ?? '—')."\n";
+        $phone = $patient?->family?->phone ?? '';
+        if ($phone !== '') {
+            $out .= 'Phone: '.$phone."\n";
+        }
+        $out .= "\n";
+
+        $tokens = $invoice->visit?->queueTokens ?? collect();
+        $hasDoc1Service1 = false;
+
+        foreach ($invoice->invoiceServices as $invSvc) {
+            $sp = $invSvc->servicePrice;
+            if (! $sp) {
+                continue;
+            }
+            $serviceName = $sp->service?->name ?? 'Service';
+            $doctorName = $sp->doctor?->name ?? null;
+            if ($sp->doctor_id === 1 && $sp->service_id === 1) {
+                $hasDoc1Service1 = true;
+            }
+
+            if ($doctorName !== null && $doctorName !== '') {
+                $out .= $serviceName.' - '.$doctorName."\n";
+            } else {
+                $out .= $serviceName."\n";
+            }
+
+            $token = $tokens->first(function ($t) use ($sp) {
+                $q = $t->queue;
+                if (! $q) {
+                    return false;
+                }
+
+                return (int) $q->service_id === (int) $sp->service_id
+                    && (int) ($q->doctor_id ?? 0) === (int) ($sp->doctor_id ?? 0);
+            });
+            $tokenNum = $token ? (string) $token->token_number : '—';
+            $out .= '#'.$tokenNum.'    Rs '.number_format($invSvc->final_amount)."\n\n";
+        }
+
+        $out .= "bp:                  temp:\n";
+
+        if ($hasDoc1Service1) {
+            $out .= "Rx:\n\n\n\n\n\n";
+        }
+
+        $out .= $this->footer();
+
+        return $out;
+    }
+}

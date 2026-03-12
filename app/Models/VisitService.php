@@ -20,6 +20,8 @@ class VisitService extends Model
         'service_id',
         'doctor_id',
         'status',
+        'shift_id',
+        'created_by',
     ];
 
     /**
@@ -34,12 +36,24 @@ class VisitService extends Model
             'visit_id' => 'integer',
             'service_id' => 'integer',
             'doctor_id' => 'integer',
+            'shift_id' => 'integer',
+            'created_by' => 'integer',
         ];
     }
 
     public function visit(): BelongsTo
     {
         return $this->belongsTo(Visit::class);
+    }
+
+    public function shift(): BelongsTo
+    {
+        return $this->belongsTo(Shift::class);
+    }
+
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     public function service(): BelongsTo

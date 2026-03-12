@@ -20,6 +20,7 @@ class Doctor extends Model
         'specialization',
         'phone',
         'is_on_payroll',
+        'payout_duration',
         'status',
     ];
 
@@ -33,6 +34,7 @@ class Doctor extends Model
         return [
             'id' => 'integer',
             'is_on_payroll' => 'boolean',
+            'payout_duration' => 'integer',
         ];
     }
 
@@ -49,5 +51,15 @@ class Doctor extends Model
     public function queues(): HasMany
     {
         return $this->hasMany(Queue::class);
+    }
+
+    public function schedules(): HasMany
+    {
+        return $this->hasMany(DoctorSchedule::class);
+    }
+
+    public function payouts(): HasMany
+    {
+        return $this->hasMany(DoctorPayout::class);
     }
 }

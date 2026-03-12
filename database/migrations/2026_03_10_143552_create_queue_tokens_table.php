@@ -22,7 +22,7 @@ return new class extends Migration
             $table->bigInteger('patient_id');
             $table->foreign('patient_id')->references('id')->on('patients');
             $table->integer('token_number');
-            $table->enum('status', ["waiting","called","completed","skipped","cancelled"]);
+            $table->enum('status', ['reserved', 'waiting', 'called', 'completed', 'skipped', 'cancelled']);
             $table->timestamp('reserved_at');
             $table->timestamp('paid_at')->nullable();
             $table->timestamp('called_at')->nullable();

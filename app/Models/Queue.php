@@ -11,6 +11,8 @@ class Queue extends Model
 {
     use HasFactory;
 
+    public const APPOINTMENT_SERVICE_ID = 1;
+
     /**
      * The attributes that are mass assignable.
      *
@@ -24,6 +26,8 @@ class Queue extends Model
         'status',
         'started_at',
         'ended_at',
+        'shift_id',
+        'created_by',
     ];
 
     /**
@@ -37,14 +41,24 @@ class Queue extends Model
             'id' => 'integer',
             'service_id' => 'integer',
             'doctor_id' => 'integer',
-            'started_at' => 'timestamp',
-            'ended_at' => 'timestamp',
+            'started_at' => 'datetime',
+            'ended_at' => 'datetime',
         ];
     }
 
     public function service(): BelongsTo
     {
         return $this->belongsTo(Service::class);
+    }
+
+    public function shift(): BelongsTo
+    {
+        return $this->belongsTo(Shift::class);
+    }
+
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     public function doctor(): BelongsTo
@@ -55,5 +69,21 @@ class Queue extends Model
     public function queueTokens(): HasMany
     {
         return $this->hasMany(QueueToken::class);
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active')->whereNull('ended_at');
+    }
+
+    public function scopeForShiftClose($query, int $shiftId)
+    {
+        return $query->where('shift_id', $shiftId);
+    }
+
+    public function scopeDailyAppointmentToClose($query)
+    {
+        return $query->where('service_id', self::APPOINTMENT_SERVICE_ID)
+            ->where('doctor_id', '>', 1);
     }
 }

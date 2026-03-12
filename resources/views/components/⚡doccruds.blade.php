@@ -3,6 +3,7 @@
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Doctor;
+use App\Models\DoctorSchedule;
 use Livewire\Attributes\Rule;
 use Livewire\Attributes\Computed;
 
@@ -16,6 +17,9 @@ new class extends Component {
 
     public string $search = '';
 
+    /** @var array<int, array{day: string, start_time: string, end_time: string}> */
+    public array $scheduleRows = [];
+
     #[Rule('required|string|max:255')]
     public string $name = '';
 
@@ -28,8 +32,14 @@ new class extends Component {
     #[Rule('boolean')]
     public bool $is_on_payroll = false;
 
-    #[Rule('required|in:active,left,onleaves')]
+    /** Payout interval in days for share-based doctors (e.g. 7, 15, 30). */
+    #[Rule('nullable|integer|in:7,15,30')]
+    public ?int $payout_duration = null;
+
+    #[Rule('required|in:active,left,on_leave')]
     public string $status = 'active';
+
+    private const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
     public function updatingSearch(): void
     {
@@ -40,6 +50,7 @@ new class extends Component {
     {
         $this->resetForm();
         $this->editingId = null;
+        $this->scheduleRows = [];
         $this->showModal = true;
     }
 
@@ -50,28 +61,71 @@ new class extends Component {
         $this->specialization = $doctor->specialization;
         $this->phone = $doctor->phone ?? '';
         $this->is_on_payroll = $doctor->is_on_payroll;
+        $this->payout_duration = $doctor->payout_duration;
         $this->status = $doctor->status;
+        $doctor->load('schedules');
+        $this->scheduleRows = $doctor->schedules->map(fn (DoctorSchedule $s): array => [
+            'day' => $s->day,
+            'start_time' => substr((string) $s->start_time, 0, 5),
+            'end_time' => substr((string) $s->end_time, 0, 5),
+        ])->values()->all();
         $this->showModal = true;
+    }
+
+    public function addScheduleRow(): void
+    {
+        $this->scheduleRows[] = ['day' => 'monday', 'start_time' => '09:00', 'end_time' => '17:00'];
+    }
+
+    public function removeScheduleRow(int $index): void
+    {
+        array_splice($this->scheduleRows, $index, 1);
     }
 
     public function save(): void
     {
         $this->validate();
 
+        foreach ($this->scheduleRows as $i => $row) {
+            $this->validate([
+                "scheduleRows.{$i}.day" => 'required|string|in:'.implode(',', self::DAYS),
+                "scheduleRows.{$i}.start_time" => 'required|date_format:H:i',
+                "scheduleRows.{$i}.end_time" => 'required|date_format:H:i|after:scheduleRows.'.$i.'.start_time',
+            ], [], [
+                "scheduleRows.{$i}.day" => 'day',
+                "scheduleRows.{$i}.start_time" => 'start time',
+                "scheduleRows.{$i}.end_time" => 'end time',
+            ]);
+        }
+
         $data = [
             'name' => $this->name,
             'specialization' => $this->specialization,
             'phone' => $this->phone ?: null,
             'is_on_payroll' => $this->is_on_payroll,
+            'payout_duration' => $this->is_on_payroll ? null : $this->payout_duration,
             'status' => $this->status,
         ];
 
         if ($this->editingId) {
-            Doctor::findOrFail($this->editingId)->update($data);
+            $doctor = Doctor::findOrFail($this->editingId);
+            $doctor->update($data);
+            $doctorId = $doctor->id;
             session()->flash('success', 'Doctor updated successfully.');
         } else {
-            Doctor::create($data);
+            $doctor = Doctor::create($data);
+            $doctorId = $doctor->id;
             session()->flash('success', 'Doctor created successfully.');
+        }
+
+        DoctorSchedule::where('doctor_id', $doctorId)->delete();
+        foreach ($this->scheduleRows as $row) {
+            DoctorSchedule::create([
+                'doctor_id' => $doctorId,
+                'day' => $row['day'],
+                'start_time' => $row['start_time'],
+                'end_time' => $row['end_time'],
+            ]);
         }
 
         $this->showModal = false;
@@ -98,18 +152,26 @@ new class extends Component {
         $this->specialization = '';
         $this->phone = '';
         $this->is_on_payroll = false;
+        $this->payout_duration = null;
         $this->status = 'active';
+        $this->scheduleRows = [];
         $this->resetValidation();
     }
 
-     #[Computed]
+    #[Computed]
     public function doctors()
     {
         return Doctor::query()
-                ->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%")
-                    ->orWhere('specialization', 'like', "%{$this->search}%"))
-                ->latest()
-                ->paginate(10);
+            ->with('schedules')
+            ->when($this->search, fn ($q) => $q->where('name', 'like', "%{$this->search}%")
+                ->orWhere('specialization', 'like', "%{$this->search}%"))
+            ->latest()
+            ->paginate(10);
+    }
+
+    public static function dayLabel(string $day): string
+    {
+        return ucfirst($day);
     }
 };
 ?>
@@ -142,7 +204,7 @@ new class extends Component {
         }
         .status-active  { background: rgba(0,255,136,.12); color: var(--success); border: 1px solid rgba(0,255,136,.25); }
         .status-left    { background: rgba(255,68,102,.12); color: var(--danger);  border: 1px solid rgba(255,68,102,.25); }
-        .status-onleaves{ background: rgba(255,170,0,.12);  color: var(--warn);    border: 1px solid rgba(255,170,0,.25); }
+        .status-on_leave{ background: rgba(255,170,0,.12);  color: var(--warn);    border: 1px solid rgba(255,170,0,.25); }
 
         .hms-btn {
             display: inline-flex; align-items: center; gap: 6px;
@@ -174,8 +236,10 @@ new class extends Component {
         .hms-table tr:last-child td { border-bottom: none; }
         .hms-table tr:hover td { background: rgba(255,255,255,.02); }
 
-        .hms-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.7); backdrop-filter: blur(4px); z-index: 50; display: flex; align-items: center; justify-content: center; }
-        .hms-modal { background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; width: 100%; max-width: 500px; padding: 28px; box-shadow: 0 25px 80px rgba(0,0,0,.6); }
+        .hms-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.7); backdrop-filter: blur(4px); z-index: 50; display: flex; align-items: center; justify-content: center; padding: 1rem; overflow-y: auto; }
+        .hms-modal { background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; width: 100%; max-width: 500px; max-height: calc(100vh - 2rem); display: flex; flex-direction: column; box-shadow: 0 25px 80px rgba(0,0,0,.6); }
+        .hms-modal-body { padding: 0 28px 28px; overflow-y: auto; flex: 1 1 auto; min-height: 0; }
+        .hms-modal-footer { padding: 28px; padding-top: 0; flex-shrink: 0; }
 
         .hms-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; }
 
@@ -197,7 +261,7 @@ new class extends Component {
     @if (session()->has('success'))
         <div class="mb-4 flex items-center gap-3 px-4 py-3 rounded-lg text-sm"
              style="background:rgba(0,255,136,.08);border:1px solid rgba(0,255,136,.2);color:var(--success);">
-            <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+            <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
             {{ session('success') }}
         </div>
     @endif
@@ -232,6 +296,7 @@ new class extends Component {
                     <th class="text-left">Name</th>
                     <th class="text-left">Specialization</th>
                     <th class="text-left">Phone</th>
+                    <th class="text-left">Schedule</th>
                     <th class="text-left">Payroll</th>
                     <th class="text-left">Status</th>
                     <th class="text-right">Actions</th>
@@ -246,10 +311,20 @@ new class extends Component {
                         </td>
                         <td style="color:#8b949e;">{{ $doctor->specialization }}</td>
                         <td style="color:#8b949e;">{{ $doctor->phone ?? '—' }}</td>
-                        <td>
+                        <td style="color:#8b949e;font-size:12px;">
+                            @forelse ($doctor->schedules as $s)
+                                <span class="block">{{ ucfirst($s->day) }} {{ \Illuminate\Support\Str::substr($s->start_time, 0, 5) }}-{{ \Illuminate\Support\Str::substr($s->end_time, 0, 5) }}</span>
+                            @empty
+                                —
+                            @endforelse
+                        </td>
+                        <td style="color:#8b949e;font-size:12px;">
                             <span class="payroll-chip {{ $doctor->is_on_payroll ? 'payroll-yes' : 'payroll-no' }}">
-                                {{ $doctor->is_on_payroll ? '✓ Payroll' : '✗ No' }}
+                                {{ $doctor->is_on_payroll ? '✓ Payroll' : '✗ Share' }}
                             </span>
+                            @if (! $doctor->is_on_payroll && $doctor->payout_duration)
+                                <span class="block mt-0.5" style="color:#484f58;">{{ $doctor->payout_duration }} days</span>
+                            @endif
                         </td>
                         <td>
                             <span class="status-badge status-{{ $doctor->status }}">
@@ -265,7 +340,7 @@ new class extends Component {
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="text-center py-12" style="color:#484f58;">
+                        <td colspan="8" class="text-center py-12" style="color:#484f58;">
                             No doctors found.
                         </td>
                     </tr>
@@ -283,14 +358,15 @@ new class extends Component {
     @if ($showModal)
         <div class="hms-modal-backdrop" wire:click.self="$set('showModal', false)">
             <div class="hms-modal">
-                <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center justify-between mb-0 px-6 pt-6 shrink-0">
                     <h2 class="hms-title text-lg font-bold" style="color:var(--accent);">
                         {{ $editingId ? 'Edit Doctor' : 'New Doctor' }}
                     </h2>
                     <button wire:click="$set('showModal', false)" style="color:#484f58;background:none;border:none;cursor:pointer;font-size:20px;">✕</button>
                 </div>
 
-                <div class="space-y-4">
+                <div class="hms-modal-body">
+                    <div class="space-y-4">
                     <div>
                         <label class="hms-label">Full Name</label>
                         <input wire:model="name" type="text" class="hms-input" placeholder="Dr. John Smith">
@@ -314,7 +390,7 @@ new class extends Component {
                         <select wire:model="status" class="hms-input">
                             <option value="active">Active</option>
                             <option value="left">Left</option>
-                            <option value="onleaves">On Leave</option>
+                            <option value="on_leave">On Leave</option>
                         </select>
                         @error('status') <p class="mt-1 text-xs" style="color:var(--danger);">{{ $message }}</p> @enderror
                     </div>
@@ -325,9 +401,60 @@ new class extends Component {
                             <span class="hms-label" style="margin:0;">On Payroll</span>
                         </label>
                     </div>
+
+                    @if (! $is_on_payroll)
+                        <div>
+                            <label class="hms-label">Payout duration <span style="color:#484f58;text-transform:none;">(share-based)</span></label>
+                            <select wire:model="payout_duration" class="hms-input">
+                                <option value="">— Select —</option>
+                                <option value="7">Weekly (7 days)</option>
+                                <option value="15">Every 15 days</option>
+                                <option value="30">Monthly (30 days)</option>
+                            </select>
+                            @error('payout_duration') <p class="mt-1 text-xs" style="color:var(--danger);">{{ $message }}</p> @enderror
+                        </div>
+                    @endif
+
+                    <div style="border-top:1px solid var(--border);padding-top:1rem;margin-top:0.5rem;">
+                        <div class="flex items-center justify-between mb-3">
+                            <label class="hms-label" style="margin:0;">Weekly schedule</label>
+                            <button type="button" wire:click="addScheduleRow" class="hms-btn hms-btn-ghost hms-btn-sm">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                Add slot
+                            </button>
+                        </div>
+                        @foreach ($scheduleRows as $index => $row)
+                            <div class="flex gap-2 items-end mb-2" wire:key="schedule-{{ $index }}">
+                                <div class="flex-1 min-w-0">
+                                    <label class="hms-label">Day</label>
+                                    <select wire:model="scheduleRows.{{ $index }}.day" class="hms-input">
+                                        @foreach (['monday','tuesday','wednesday','thursday','friday','saturday','sunday'] as $d)
+                                            <option value="{{ $d }}">{{ ucfirst($d) }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div style="width:90px;">
+                                    <label class="hms-label">Start</label>
+                                    <input wire:model="scheduleRows.{{ $index }}.start_time" type="time" class="hms-input">
+                                </div>
+                                <div style="width:90px;">
+                                    <label class="hms-label">End</label>
+                                    <input wire:model="scheduleRows.{{ $index }}.end_time" type="time" class="hms-input">
+                                </div>
+                                <button type="button" wire:click="removeScheduleRow({{ $index }})" class="hms-btn hms-btn-danger hms-btn-sm shrink-0">✕</button>
+                            </div>
+                            @error("scheduleRows.{$index}.day") <p class="mt-0 mb-1 text-xs" style="color:var(--danger);">{{ $message }}</p> @enderror
+                            @error("scheduleRows.{$index}.start_time") <p class="mt-0 mb-1 text-xs" style="color:var(--danger);">{{ $message }}</p> @enderror
+                            @error("scheduleRows.{$index}.end_time") <p class="mt-0 mb-1 text-xs" style="color:var(--danger);">{{ $message }}</p> @enderror
+                        @endforeach
+                        @if (count($scheduleRows) === 0)
+                            <p class="text-sm" style="color:#484f58;">No schedule slots. Click “Add slot” to set working hours.</p>
+                        @endif
+                    </div>
+                    </div>
                 </div>
 
-                <div class="flex justify-end gap-3 mt-6 pt-5" style="border-top:1px solid var(--border);">
+                <div class="hms-modal-footer flex justify-end gap-3 pt-5 px-6 pb-6" style="border-top:1px solid var(--border);">
                     <button wire:click="$set('showModal', false)" class="hms-btn hms-btn-ghost">Cancel</button>
                     <button wire:click="save" class="hms-btn hms-btn-primary">
                         <span wire:loading.remove wire:target="save">{{ $editingId ? 'Update' : 'Create' }}</span>

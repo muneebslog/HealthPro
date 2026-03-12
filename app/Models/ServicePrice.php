@@ -52,4 +52,44 @@ class ServicePrice extends Model
     {
         return $this->hasMany(InvoiceService::class);
     }
+
+    /**
+     * Calculated doctor share amount (stored as doctor_share when set).
+     */
+    public function getCalculatedDoctorShareAmount(): ?int
+    {
+        return $this->doctor_share;
+    }
+
+    /**
+     * Calculated hospital share amount (stored as hospital_share).
+     */
+    public function getCalculatedHospitalShareAmount(): int
+    {
+        return $this->hospital_share;
+    }
+
+    /**
+     * Doctor share as percentage of price (0–100). Null if no doctor share.
+     */
+    public function getDoctorSharePercentage(): ?float
+    {
+        if ($this->price <= 0 || $this->doctor_share === null) {
+            return null;
+        }
+
+        return round($this->doctor_share / $this->price * 100, 2);
+    }
+
+    /**
+     * Hospital share as percentage of price (0–100).
+     */
+    public function getHospitalSharePercentage(): float
+    {
+        if ($this->price <= 0) {
+            return 0.0;
+        }
+
+        return round($this->hospital_share / $this->price * 100, 2);
+    }
 }

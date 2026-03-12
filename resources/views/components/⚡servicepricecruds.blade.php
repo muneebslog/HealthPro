@@ -29,7 +29,8 @@ new class extends Component {
     #[Rule('required|integer|min:0')]
     public string $price = '';
 
-    #[Rule('nullable|integer|min:0')]
+    /** Doctor share as percentage (0–100). Stored in DB as computed amount. */
+    #[Rule('nullable|numeric|min:0|max:100')]
     public string $doctor_share = '';
 
     #[Rule('required|integer|min:0')]
@@ -61,7 +62,9 @@ new class extends Component {
         $this->service_id = $servicePrice->service_id;
         $this->doctor_id = $servicePrice->doctor_id;
         $this->price = (string) $servicePrice->price;
-        $this->doctor_share = $servicePrice->doctor_share !== null ? (string) $servicePrice->doctor_share : '';
+        $this->doctor_share = $servicePrice->price > 0 && $servicePrice->doctor_share !== null
+            ? (string) round($servicePrice->doctor_share / $servicePrice->price * 100)
+            : '';
         $this->hospital_share = (string) $servicePrice->hospital_share;
         $this->showModal = true;
     }
@@ -70,12 +73,20 @@ new class extends Component {
     {
         $this->validate();
 
+        $price = (int) $this->price;
+        $doctorShareAmount = $this->doctor_share !== ''
+            ? (int) round($price * (float) $this->doctor_share / 100)
+            : null;
+        $hospitalShare = $this->doctor_share !== ''
+            ? (int) round($price * (100 - (float) $this->doctor_share) / 100)
+            : $price;
+
         $data = [
             'service_id' => $this->service_id,
             'doctor_id' => $this->doctor_id ?: null,
-            'price' => (int) $this->price,
-            'doctor_share' => $this->doctor_share !== '' ? (int) $this->doctor_share : null,
-            'hospital_share' => (int) $this->hospital_share,
+            'price' => $price,
+            'doctor_share' => $doctorShareAmount,
+            'hospital_share' => $hospitalShare,
         ];
 
 
@@ -108,16 +119,15 @@ new class extends Component {
 
     public function updatedPrice(): void
     {
-        // Auto-calculate hospital share if price and doctor_share are set
         if ($this->price !== '' && $this->doctor_share !== '') {
-            $this->hospital_share = (string) max(0, (int) $this->price - (int) $this->doctor_share);
+            $this->hospital_share = (string) (int) round((int) $this->price * (100 - (float) $this->doctor_share) / 100);
         }
     }
 
     public function updatedDoctorShare(): void
     {
         if ($this->price !== '' && $this->doctor_share !== '') {
-            $this->hospital_share = (string) max(0, (int) $this->price - (int) $this->doctor_share);
+            $this->hospital_share = (string) (int) round((int) $this->price * (100 - (float) $this->doctor_share) / 100);
         }
     }
 
@@ -479,7 +489,11 @@ new class extends Component {
                             <span class="font-semibold" style="color:var(--gold);">{{ number_format($sp->price) }}</span>
                         </td>
                         <td class="text-right amount-cell" style="color:#8b949e;">
-                            {{ $sp->doctor_share !== null ? number_format($sp->doctor_share) : '—' }}
+                            @if ($sp->doctor_share !== null && $sp->price > 0)
+                                {{ round($sp->doctor_share / $sp->price * 100) }}% <span style="color:#484f58;font-size:11px;">({{ number_format($sp->doctor_share) }})</span>
+                            @else
+                                —
+                            @endif
                         </td>
                         <td class="text-right amount-cell" style="color:#8b949e;">
                             {{ number_format($sp->hospital_share) }}
@@ -568,10 +582,10 @@ new class extends Component {
                             @enderror
                         </div>
                         <div class="price-card">
-                            <div class="price-card-label">Doctor Share</div>
-                            <input wire:model.live="doctor_share" type="number" min="0" class="hms-input"
+                            <div class="price-card-label">Doctor Share (%)</div>
+                            <input wire:model.live="doctor_share" type="number" min="0" max="100" step="0.5" class="hms-input"
                                 style="background:transparent;border:none;border-bottom:1px solid var(--border);border-radius:0;padding:4px 0;font-size:18px;font-weight:700;color:var(--accent);"
-                                placeholder="0">
+                                placeholder="0–100">
                             @error('doctor_share') <p class="mt-1 text-xs" style="color:var(--danger);">{{ $message }}</p>
                             @enderror
                         </div>
@@ -584,12 +598,11 @@ new class extends Component {
                             @enderror
                         </div>
                     </div>
-                    <p class="hint">💡 Doctor share auto-calculates hospital share when both price and doctor share are
-                        entered.</p>
+                    <p class="hint">💡 Doctor share is a percentage (0–100). Hospital share is auto-calculated.</p>
 
                     {{-- Live split bar --}}
-                    @if ($price && $doctor_share)
-                        @php $pct = $price > 0 ? round(intval($doctor_share) / intval($price) * 100) : 0; @endphp
+                    @if ($price && $doctor_share !== '')
+                        @php $pct = min(100, max(0, (float) $doctor_share)); @endphp
                         <div>
                             <div class="share-bar" style="height:8px;">
                                 <div class="share-bar-fill"

@@ -1,4 +1,11 @@
 models:
+  User:
+    name: string
+    email: string
+    password: string
+    relationships:
+      hasMany: Shift (openedBy, closedBy)
+
   Patient:
     name: string
     gender: enum:"male,female"
@@ -21,9 +28,17 @@ models:
     specialization: string
     phone: string nullable
     is_on_payroll: boolean
-    status: enum:"active,left,onleaves"
+    status: enum:"active,left,on_leave"
     relationships:
-      hasMany: ServicePrice, VisitService, Queue
+      hasMany: ServicePrice, VisitService, Queue, DoctorSchedule
+
+  DoctorSchedule:
+    doctor_id: foreignId foreign:Doctor.id
+    day: string
+    start_time: time
+    end_time: time
+    relationships:
+      belongsTo: Doctor
 
   Service:
     name: string
@@ -41,50 +56,70 @@ models:
       belongsTo: Service, Doctor
       hasMany: InvoiceService
 
+  Shift:
+    opened_at: timestamp
+    closed_at: timestamp nullable
+    opened_by: foreignId foreign:User.id
+    closed_by: foreignId nullable foreign:User.id
+    relationships:
+      belongsTo: User (openedBy, closedBy)
+      hasMany: Visit, Invoice, QueueToken
+
   Invoice:
     patient_id: bigInteger foreign:Patient.id
     visit_id: bigInteger foreign:Visit.id
     total_amount: integer
     status: enum:"unpaid,paid,partialpaid"
+    shift_id: foreignId nullable foreign:Shift.id
+    created_by: foreignId nullable foreign:User.id
     relationships:
-      belongsTo: Patient, Visit
+      belongsTo: Patient, Visit, Shift, User (createdBy)
       hasMany: InvoiceService
 
   InvoiceService:
     serviceprice_id: bigInteger foreign:ServicePrice.id
-    invoice_id: bigInteger foreign:Invoice.id
+    service_price_id: foreignId foreign:ServicePrice.id
+    invoice_id: foreignId foreign:Invoice.id
     price: integer
     discount: integer
     final_amount: integer
+    shift_id: foreignId nullable foreign:Shift.id
+    created_by: foreignId nullable foreign:User.id
     relationships:
-      belongsTo: ServicePrice, Invoice
+      belongsTo: ServicePrice, Invoice, Shift, User (createdBy)
 
   Visit:
     patient_id: bigInteger foreign:Patient.id
     status: enum:"reserved,confirmed,completed,cancelled"
+    shift_id: foreignId nullable foreign:Shift.id
+    created_by: foreignId nullable foreign:User.id
     relationships:
-      belongsTo: Patient
+      belongsTo: Patient, Shift, User (createdBy)
       hasMany: VisitService, QueueToken
       hasOne: Invoice
 
   VisitService:
     visit_id: bigInteger foreign:Visit.id
     service_id: bigInteger foreign:Service.id
-    doctor_id: bigInteger foreign:Doctor.id
+    doctor_id: bigInteger nullable foreign:Doctor.id
     status: enum:"assigned,waiting,inprogress,completed"
+    shift_id: foreignId nullable foreign:Shift.id
+    created_by: foreignId nullable foreign:User.id
     relationships:
-      belongsTo: Visit, Service, Doctor
+      belongsTo: Visit, Service, Doctor, Shift, User (createdBy)
 
   Queue:
     service_id: bigInteger foreign:Service.id
     doctor_id: bigInteger nullable foreign:Doctor.id
     queue_type: enum:"continuous,daily,shift"
     current_token: integer
-    status: enum:"active,discontinuted"
+    status: enum:"active,discontinued"
     started_at: timestamp
-    ended_at: timestamp
+    ended_at: timestamp nullable
+    shift_id: foreignId nullable foreign:Shift.id
+    created_by: foreignId nullable foreign:User.id
     relationships:
-      belongsTo: Service, Doctor
+      belongsTo: Service, Doctor, Shift, User (createdBy)
       hasMany: QueueToken
 
   QueueToken:
@@ -92,10 +127,12 @@ models:
     visit_id: bigInteger foreign:Visit.id
     patient_id: bigInteger foreign:Patient.id
     token_number: integer
-    status: enum:"waiting,called,completed,skipped,cancelled"
+    status: enum:"reserved,waiting,called,completed,skipped,cancelled"
     reserved_at: timestamp
-    paid_at: timestamp
-    called_at: timestamp
-    completed_at: timestamp
+    paid_at: timestamp nullable
+    called_at: timestamp nullable
+    completed_at: timestamp nullable
+    shift_id: foreignId nullable foreign:Shift.id
+    created_by: foreignId nullable foreign:User.id
     relationships:
-      belongsTo: Queue, Visit, Patient
+      belongsTo: Queue, Visit, Patient, Shift, User (createdBy)

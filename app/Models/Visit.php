@@ -20,6 +20,8 @@ class Visit extends Model
     protected $fillable = [
         'patient_id',
         'status',
+        'shift_id',
+        'created_by',
     ];
 
     /**
@@ -32,12 +34,24 @@ class Visit extends Model
         return [
             'id' => 'integer',
             'patient_id' => 'integer',
+            'shift_id' => 'integer',
+            'created_by' => 'integer',
         ];
     }
 
     public function patient(): BelongsTo
     {
         return $this->belongsTo(Patient::class);
+    }
+
+    public function shift(): BelongsTo
+    {
+        return $this->belongsTo(Shift::class);
+    }
+
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     public function visitServices(): HasMany

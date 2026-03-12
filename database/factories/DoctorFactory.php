@@ -11,12 +11,15 @@ class DoctorFactory extends Factory
      */
     public function definition(): array
     {
+        $onPayroll = fake()->boolean();
+
         return [
             'name' => fake()->name(),
             'specialization' => fake()->word(),
             'phone' => fake()->phoneNumber(),
-            'is_on_payroll' => fake()->boolean(),
-            'status' => fake()->randomElement(["active","left","onleaves"]),
+            'is_on_payroll' => $onPayroll,
+            'payout_duration' => $onPayroll ? null : fake()->randomElement([7, 15, 30]),
+            'status' => fake()->randomElement(['active', 'left', 'on_leave']),
         ];
     }
 }

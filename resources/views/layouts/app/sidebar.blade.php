@@ -4,10 +4,10 @@
         @include('partials.head')
     </head>
     <body class="min-h-screen bg-white dark:bg-zinc-800">
-        <flux:sidebar sticky collapsible="mobile" class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
+        <flux:sidebar sticky collapsible class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
             <flux:sidebar.header>
                 <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate />
-                <flux:sidebar.collapse class="lg:hidden" />
+                <flux:sidebar.collapse class="" />
             </flux:sidebar.header>
 
             <flux:sidebar.nav>
@@ -19,9 +19,29 @@
                         {{ __('Cruds') }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
+                <flux:sidebar.group :heading="__('Tools')" class="grid">
+                    <flux:sidebar.item icon="command-line" :href="route('tinker')" :current="request()->routeIs('tinker')" wire:navigate>
+                        {{ __('Tinker') }}
+                    </flux:sidebar.item>
+                </flux:sidebar.group>
                 <flux:sidebar.group :heading="__('Reception')" class="grid">
+                    <flux:sidebar.item icon="clock" :href="route('reception.shift')" :current="request()->routeIs('reception.shift')" wire:navigate>
+                        {{ __('Shift') }}
+                    </flux:sidebar.item>
                     <flux:sidebar.item icon="user-plus" :href="route('reception.walkin')" :current="request()->routeIs('reception.walkin')" wire:navigate>
                         {{ __('Walk-in') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="calendar-days" :href="route('reception.appointment')" :current="request()->routeIs('reception.appointment')" wire:navigate>
+                        {{ __('Appointments') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="document-text" :href="route('reception.invoices')" :current="request()->routeIs('reception.invoices')" wire:navigate>
+                        {{ __('Invoices') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="list-bullet" :href="route('reception.queues')" :current="request()->routeIs('reception.queues')" wire:navigate>
+                        {{ __('Queues') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="banknotes" :href="route('reception.payout')" :current="request()->routeIs('reception.payout')" wire:navigate>
+                        {{ __('Doctor payout') }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
             </flux:sidebar.nav>
