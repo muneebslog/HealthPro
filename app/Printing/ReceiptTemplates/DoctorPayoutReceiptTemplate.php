@@ -10,16 +10,19 @@ class DoctorPayoutReceiptTemplate extends AbstractReceiptTemplate
         private readonly DoctorPayout $payout
     ) {}
 
-    public function toEscPosText(): string
+    protected function getReceiptType(): string
+    {
+        return 'Doctor payout';
+    }
+
+    protected function getBodyContent(): string
     {
         $payout = $this->payout->loadMissing([
             'doctor',
             'ledgerEntries.invoiceService.servicePrice.service',
         ]);
 
-        $out = $this->header('Doctor payout');
-
-        $out .= 'Doctor: '.($payout->doctor?->name ?? '—')."\n";
+        $out = 'Doctor: '.($payout->doctor?->name ?? '—')."\n";
         $duration = $payout->doctor?->payout_duration;
         $out .= 'Payout duration: '.($duration !== null ? $duration.' days' : '—')."\n";
         $out .= 'Period: '.$payout->period_from->format('M j, Y').' - '.$payout->period_to->format('M j, Y')."\n";
@@ -34,8 +37,7 @@ class DoctorPayoutReceiptTemplate extends AbstractReceiptTemplate
         }
 
         $out .= "\nTotal share: Rs ".number_format($payout->amount)."\n";
-        $out .= "\n".$this->footer();
 
-        return $out;
+        return "\n".$out;
     }
 }

@@ -11,6 +11,9 @@ use App\Printing\ReceiptPrinterConnectorFactory;
 
 beforeEach(function () {
     $printerMock = \Mockery::mock();
+    $printerMock->shouldReceive('setJustification')->andReturnSelf();
+    $printerMock->shouldReceive('setTextSize')->andReturnSelf();
+    $printerMock->shouldReceive('setEmphasis')->andReturnSelf();
     $printerMock->shouldReceive('text')->with(\Mockery::type('string'))->andReturnSelf();
     $printerMock->shouldReceive('cut')->andReturnSelf();
     $printerMock->shouldReceive('close')->andReturnNull();

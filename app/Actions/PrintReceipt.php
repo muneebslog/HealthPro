@@ -7,6 +7,7 @@ use App\Models\Invoice;
 use App\Models\ReceiptPrint;
 use App\Models\Shift;
 use App\Printing\ReceiptPrinterConnectorFactory;
+use App\Printing\ReceiptTemplates\AbstractReceiptTemplate;
 use App\Printing\ReceiptTemplates\DoctorPayoutReceiptTemplate;
 use App\Printing\ReceiptTemplates\InvoiceReceiptTemplate;
 use App\Printing\ReceiptTemplates\ShiftCloseReceiptTemplate;
@@ -22,21 +23,21 @@ class PrintReceipt
     {
         $port = $printerPort ?? config('printing.default_printer_port', 'COM4');
         $template = new InvoiceReceiptTemplate($invoice);
-        $this->print('invoice', $template->toEscPosText(), $port, invoiceId: $invoice->id);
+        $this->print('invoice', $template, $port, invoiceId: $invoice->id);
     }
 
     public function forShiftClose(Shift $shift, ?string $printerPort = null): void
     {
         $port = $printerPort ?? config('printing.default_printer_port', 'COM4');
         $template = new ShiftCloseReceiptTemplate($shift);
-        $this->print('shift_close', $template->toEscPosText(), $port, shiftId: $shift->id);
+        $this->print('shift_close', $template, $port, shiftId: $shift->id);
     }
 
     public function forDoctorPayout(DoctorPayout $payout, ?string $printerPort = null): void
     {
         $port = $printerPort ?? config('printing.default_printer_port', 'COM4');
         $template = new DoctorPayoutReceiptTemplate($payout);
-        $this->print('doctor_payout', $template->toEscPosText(), $port, doctorPayoutId: $payout->id);
+        $this->print('doctor_payout', $template, $port, doctorPayoutId: $payout->id);
     }
 
     public function printTest(?string $printerPort = null): void
@@ -75,11 +76,11 @@ class PrintReceipt
     /**
      * @param  array{invoice_id?: int, shift_id?: int, doctor_payout_id?: int}  $entityIds
      */
-    private function print(string $printType, string $content, string $port, ?int $invoiceId = null, ?int $shiftId = null, ?int $doctorPayoutId = null): void
+    private function print(string $printType, AbstractReceiptTemplate $template, string $port, ?int $invoiceId = null, ?int $shiftId = null, ?int $doctorPayoutId = null): void
     {
         $printer = $this->connectorFactory->printer($port);
         try {
-            $printer->text($content);
+            $template->printTo($printer);
             $printer->cut();
         } finally {
             $printer->close();

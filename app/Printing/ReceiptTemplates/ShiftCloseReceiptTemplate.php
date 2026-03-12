@@ -10,13 +10,16 @@ class ShiftCloseReceiptTemplate extends AbstractReceiptTemplate
         private readonly Shift $shift
     ) {}
 
-    public function toEscPosText(): string
+    protected function getReceiptType(): string
+    {
+        return 'End of shift';
+    }
+
+    protected function getBodyContent(): string
     {
         $shift = $this->shift->loadMissing(['openedBy', 'expenses', 'doctorPayouts']);
 
-        $out = $this->header('End of shift');
-
-        $out .= 'Shift opened by: '.($shift->openedBy?->name ?? '—')."\n";
+        $out = 'Shift opened by: '.($shift->openedBy?->name ?? '—')."\n";
         $out .= 'Opened at: '.$shift->opened_at->format('M j, Y h:i A')."\n";
         $out .= 'Opening balance: '.number_format((float) $shift->opening_cash, 2)."\n";
 
@@ -39,8 +42,6 @@ class ShiftCloseReceiptTemplate extends AbstractReceiptTemplate
             $out .= 'Cash in hand: '.number_format((float) $shift->cash_in_hand, 2)."\n";
         }
 
-        $out .= "\n".$this->footer();
-
-        return $out;
+        return "\n".$out;
     }
 }

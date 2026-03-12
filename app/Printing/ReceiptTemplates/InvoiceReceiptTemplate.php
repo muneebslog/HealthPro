@@ -10,7 +10,12 @@ class InvoiceReceiptTemplate extends AbstractReceiptTemplate
         private readonly Invoice $invoice
     ) {}
 
-    public function toEscPosText(): string
+    protected function getReceiptType(): string
+    {
+        return 'Invoice';
+    }
+
+    protected function getBodyContent(): string
     {
         $invoice = $this->invoice->loadMissing([
             'visit.queueTokens.queue',
@@ -19,7 +24,7 @@ class InvoiceReceiptTemplate extends AbstractReceiptTemplate
             'invoiceServices.servicePrice.doctor',
         ]);
 
-        $out = $this->header('Invoice');
+        $out = '';
 
         $patient = $invoice->visit?->patient;
         $out .= 'Patient: '.($patient?->name ?? '—')."\n";
@@ -67,8 +72,6 @@ class InvoiceReceiptTemplate extends AbstractReceiptTemplate
         if ($hasDoc1Service1) {
             $out .= "Rx:\n\n\n\n\n\n";
         }
-
-        $out .= $this->footer();
 
         return $out;
     }
