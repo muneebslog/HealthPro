@@ -2,24 +2,28 @@
 
 namespace App\Printing;
 
+use Mike42\Escpos\PrintConnectors\FilePrintConnector;
+use Mike42\Escpos\PrintConnectors\WindowsPrintConnector;
 use Mike42\Escpos\Printer;
 
 class ReceiptPrinterConnectorFactory
 {
     /**
-     * Create a print connector for the given port (e.g. COM8) or printer name.
+     * Create a print connector — accepts either a COM port (e.g. "COM8")
+     * or a Windows printer name (e.g. "Tysso Thermal Receipt Printer").
      */
-    public function connector(string $port): WindowsReceiptPrintConnector
+    public function connector(string $port): FilePrintConnector|WindowsPrintConnector
     {
-        return new WindowsReceiptPrintConnector($port);
+        if (preg_match('/^COM\d+$/i', $port)) {
+            // COM ports require UNC path format on Windows (required for COM5+, safe for all)
+            return new FilePrintConnector('\\\\.\\'.$port);
+        }
+
+        // Treat anything else as a Windows printer name
+        return new WindowsPrintConnector($port);
     }
 
-    /**
-     * Create a Printer instance for the given port.
-     *
-     * @return Printer
-     */
-    public function printer(string $port)
+    public function printer(string $port): Printer
     {
         return new Printer($this->connector($port));
     }

@@ -20,4 +20,31 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('reception/payout', 'pages::reception.payout')->name('reception.payout');
 });
 
+
+
+Route::get('/printer-debug', function () {
+    try {
+        $connector = new \Mike42\Escpos\PrintConnectors\WindowsPrintConnector('Tysso Thermal Receipt Printer');
+        $printer = new \Mike42\Escpos\Printer($connector);
+        $printer->text("TEST\n");
+        $printer->cut();
+        $printer->close();
+        return 'Printed via name OK';
+    } catch (\Throwable $e) {
+        return 'Name failed: ' . $e->getMessage();
+    }
+})->middleware('auth');
+
+Route::get('/printer-debug-port', function () {
+    try {
+        $connector = new \Mike42\Escpos\PrintConnectors\FilePrintConnector('\\\\.\\COM8');
+        $printer = new \Mike42\Escpos\Printer($connector);
+        $printer->text("TEST\n");
+        $printer->cut();
+        $printer->close();
+        return 'Printed via port OK';
+    } catch (\Throwable $e) {
+        return 'Port failed: ' . $e->getMessage();
+    }
+})->middleware('auth');
 require __DIR__.'/settings.php';
