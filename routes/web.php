@@ -19,8 +19,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::livewire('invoices', 'pages::doctor.invoices')->name('invoices');
         Route::livewire('payouts', 'pages::doctor.payouts')->name('payouts');
         Route::livewire('appointments', 'pages::doctor.appointments')->name('appointments');
+        Route::livewire('procedures', 'pages::doctor.procedures')->name('procedures');
     });
     Route::livewire('reception/walkin', 'pages::reception.walkin')->name('reception.walkin');
+    Route::livewire('reception/procedure', 'pages::reception.procedure')->name('reception.procedure');
+    Route::livewire('reception/procedures', 'pages::reception.procedures')->name('reception.procedures');
     Route::livewire('reception/appointment', 'pages::reception.appointment')->name('reception.appointment');
     Route::livewire('reception/invoices', 'pages::reception.invoices')->name('reception.invoices');
     Route::livewire('reception/queues', 'pages::reception.queues')->name('reception.queues');

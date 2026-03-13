@@ -19,7 +19,9 @@ class Invoice extends Model
     protected $fillable = [
         'patient_id',
         'visit_id',
+        'procedure_admission_id',
         'total_amount',
+        'paid_amount',
         'status',
         'shift_id',
         'created_by',
@@ -36,9 +38,32 @@ class Invoice extends Model
             'id' => 'integer',
             'patient_id' => 'integer',
             'visit_id' => 'integer',
+            'procedure_admission_id' => 'integer',
+            'total_amount' => 'integer',
+            'paid_amount' => 'integer',
             'shift_id' => 'integer',
             'created_by' => 'integer',
         ];
+    }
+
+    public function procedureAdmission(): BelongsTo
+    {
+        return $this->belongsTo(ProcedureAdmission::class);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    public function remainingBalance(): int
+    {
+        return max(0, $this->total_amount - $this->paid_amount);
+    }
+
+    public function isProcedure(): bool
+    {
+        return $this->procedure_admission_id !== null;
     }
 
     public function patient(): BelongsTo

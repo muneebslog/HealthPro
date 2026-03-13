@@ -7,6 +7,7 @@ use App\Models\Family;
 use App\Models\Invoice;
 use App\Models\InvoiceService;
 use App\Models\Patient;
+use App\Models\ProcedureAdmission;
 use App\Models\Queue;
 use App\Models\QueueToken;
 use App\Models\Service;
@@ -21,6 +22,7 @@ test('doctor portal routes require authentication', function () {
     $this->get(route('doctor.invoices'))->assertRedirect(route('login'));
     $this->get(route('doctor.payouts'))->assertRedirect(route('login'));
     $this->get(route('doctor.appointments'))->assertRedirect(route('login'));
+    $this->get(route('doctor.procedures'))->assertRedirect(route('login'));
 });
 
 test('staff user cannot access doctor portal', function () {
@@ -32,6 +34,7 @@ test('staff user cannot access doctor portal', function () {
     $this->get(route('doctor.invoices'))->assertForbidden();
     $this->get(route('doctor.payouts'))->assertForbidden();
     $this->get(route('doctor.appointments'))->assertForbidden();
+    $this->get(route('doctor.procedures'))->assertForbidden();
 });
 
 test('user with doctor role but no linked doctor cannot access doctor portal', function () {
@@ -61,6 +64,7 @@ test('user with doctor role and linked active doctor can access doctor portal', 
     $this->get(route('doctor.invoices'))->assertSuccessful();
     $this->get(route('doctor.payouts'))->assertSuccessful();
     $this->get(route('doctor.appointments'))->assertSuccessful();
+    $this->get(route('doctor.procedures'))->assertSuccessful();
 });
 
 test('doctor invoices page only shows invoice lines for that doctor', function () {
@@ -222,4 +226,79 @@ test('doctor appointments page only shows queue for that doctor', function () {
     $response->assertSuccessful();
     $response->assertSee('Patient For Doctor A');
     $response->assertDontSee('Patient For Doctor B');
+});
+
+test('doctor procedures page only shows procedures for that doctor', function () {
+    $userA = User::factory()->doctor()->create();
+    $doctorA = Doctor::factory()->create(['user_id' => $userA->id, 'status' => 'active']);
+    $doctorB = Doctor::factory()->create(['status' => 'active']);
+
+    $familyA = Family::create(['phone' => '1111111111', 'head_id' => null]);
+    $familyB = Family::create(['phone' => '2222222222', 'head_id' => null]);
+    $patientA = Patient::factory()->create(['family_id' => $familyA->id, 'relation_to_head' => 'self']);
+    $patientB = Patient::factory()->create(['family_id' => $familyB->id, 'relation_to_head' => 'self']);
+    $familyA->update(['head_id' => $patientA->id]);
+    $familyB->update(['head_id' => $patientB->id]);
+
+    $admissionA = ProcedureAdmission::create([
+        'patient_id' => $patientA->id,
+        'package_name' => 'Cataract Surgery For Doctor A',
+        'full_price' => 50000,
+        'operation_doctor_id' => $doctorA->id,
+        'operation_date' => now(),
+        'room' => 'Room 1',
+        'bed' => 'Bed 1',
+        'shift_id' => null,
+        'created_by' => $userA->id,
+    ]);
+    $admissionB = ProcedureAdmission::create([
+        'patient_id' => $patientB->id,
+        'package_name' => 'Hip Replacement For Doctor B',
+        'full_price' => 100000,
+        'operation_doctor_id' => $doctorB->id,
+        'operation_date' => now(),
+        'room' => 'Room 2',
+        'bed' => 'Bed 2',
+        'shift_id' => null,
+        'created_by' => $userA->id,
+    ]);
+
+    Invoice::create([
+        'patient_id' => $patientA->id,
+        'visit_id' => null,
+        'procedure_admission_id' => $admissionA->id,
+        'total_amount' => 50000,
+        'paid_amount' => 20000,
+        'status' => 'partialpaid',
+        'shift_id' => null,
+        'created_by' => $userA->id,
+    ]);
+    Invoice::create([
+        'patient_id' => $patientB->id,
+        'visit_id' => null,
+        'procedure_admission_id' => $admissionB->id,
+        'total_amount' => 100000,
+        'paid_amount' => 50000,
+        'status' => 'partialpaid',
+        'shift_id' => null,
+        'created_by' => $userA->id,
+    ]);
+
+    $this->actingAs($userA);
+    $response = $this->get(route('doctor.procedures'));
+    $response->assertSuccessful();
+    $response->assertSee('Cataract Surgery For Doctor A');
+    $response->assertSee($patientA->name);
+    $response->assertDontSee('Hip Replacement For Doctor B');
+    $response->assertDontSee($patientB->name);
+});
+
+test('doctor without procedures sees empty list', function () {
+    $user = User::factory()->doctor()->create();
+    Doctor::factory()->create(['user_id' => $user->id, 'status' => 'active']);
+    $this->actingAs($user);
+
+    $response = $this->get(route('doctor.procedures'));
+    $response->assertSuccessful();
+    $response->assertSee('No procedures found.');
 });

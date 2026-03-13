@@ -13,10 +13,64 @@ class InvoiceReceiptTemplate extends AbstractReceiptTemplate
 
     protected function getReceiptType(): string
     {
-        return 'Invoice';
+        return $this->invoice->isProcedure() ? 'Procedure Invoice' : 'Invoice';
     }
 
     protected function getBodyContent(): string
+    {
+        if ($this->invoice->isProcedure()) {
+            return $this->getProcedureBodyContent();
+        }
+
+        return $this->getVisitBodyContent();
+    }
+
+    protected function getProcedureBodyContent(): string
+    {
+        $invoice = $this->invoice->loadMissing([
+            'patient.family',
+            'procedureAdmission.operationDoctor',
+        ]);
+
+        $patient = $invoice->patient;
+        $mrNumber = $patient?->mr_number;
+        if ($patient !== null && ($mrNumber === null || $mrNumber === '')) {
+            $patient->mr_number = Patient::generateMrNumber();
+            $patient->saveQuietly();
+            $mrNumber = $patient->mr_number;
+        }
+
+        $admission = $invoice->procedureAdmission;
+        $out = 'Patient: '.($patient?->name ?? '—')."\n";
+        $out .= 'MR#: '.($mrNumber ?? '—')."\n";
+        $phone = $patient?->family?->phone ?? '';
+        if ($phone !== '') {
+            $out .= 'Phone: '.$phone."\n";
+        }
+        $out .= "\n";
+
+        $out .= 'Package: '.($admission?->package_name ?? '—')."\n";
+        $out .= 'Full Price: Rs '.number_format($invoice->total_amount)."\n";
+        $out .= 'Advance Paid: Rs '.number_format($invoice->paid_amount)."\n";
+        $out .= 'Remaining: Rs '.number_format($invoice->remainingBalance())."\n\n";
+
+        if ($admission?->operationDoctor) {
+            $out .= 'Operation Doctor: '.$admission->operationDoctor->name."\n";
+        }
+        if ($admission?->operation_date) {
+            $out .= 'Operation Date: '.$admission->operation_date->format('M j, Y')."\n";
+        }
+        if ($admission?->room) {
+            $out .= 'Room: '.$admission->room."\n";
+        }
+        if ($admission?->bed) {
+            $out .= 'Bed: '.$admission->bed."\n";
+        }
+
+        return $out;
+    }
+
+    protected function getVisitBodyContent(): string
     {
         $invoice = $this->invoice->loadMissing([
             'visit.queueTokens.queue',
@@ -82,6 +136,10 @@ class InvoiceReceiptTemplate extends AbstractReceiptTemplate
 
     protected function getSmallBodyContent(): string
     {
+        if ($this->invoice->isProcedure()) {
+            return '';
+        }
+
         $hasDoc1Service1 = $this->invoice->invoiceServices->contains(fn ($invSvc) => (int) ($invSvc->servicePrice?->doctor_id ?? 0) === 1 && (int) ($invSvc->servicePrice?->service_id ?? 0) === 1);
 
         $out = "bp:                  temp:\n";

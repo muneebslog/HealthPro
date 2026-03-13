@@ -39,6 +39,9 @@
                         <flux:sidebar.item icon="calendar-days" :href="route('doctor.appointments')" :current="request()->routeIs('doctor.appointments')" wire:navigate>
                             {{ __('Appointments & queue') }}
                         </flux:sidebar.item>
+                        <flux:sidebar.item icon="clipboard-document-list" :href="route('doctor.procedures')" :current="request()->routeIs('doctor.procedures')" wire:navigate>
+                            {{ __('My Procedures') }}
+                        </flux:sidebar.item>
                     </flux:sidebar.group>
                 @endif
 
@@ -66,6 +69,12 @@
                     </flux:sidebar.item>
                     <flux:sidebar.item icon="user-plus" :href="route('reception.walkin')" :current="request()->routeIs('reception.walkin')" wire:navigate>
                         {{ __('Walk-in') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="clipboard-document-list" :href="route('reception.procedure')" :current="request()->routeIs('reception.procedure')" wire:navigate>
+                        {{ __('Procedure') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="list-bullet" :href="route('reception.procedures')" :current="request()->routeIs('reception.procedures')" wire:navigate>
+                        {{ __('Procedures List') }}
                     </flux:sidebar.item>
                     <flux:sidebar.item icon="calendar-days" :href="route('reception.appointment')" :current="request()->routeIs('reception.appointment')" wire:navigate>
                         {{ __('Appointments') }}

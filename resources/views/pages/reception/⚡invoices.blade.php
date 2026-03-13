@@ -2,6 +2,7 @@
 
 use App\Actions\PrintReceipt;
 use App\Models\Invoice;
+use App\Models\Payment;
 use App\Models\Shift;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\Computed;
@@ -19,6 +20,12 @@ new class extends Component
 
     public ?int $currentShiftId = null;
 
+    public bool $showAddPaymentModal = false;
+
+    public ?int $addPaymentInvoiceId = null;
+
+    public int $addPaymentAmount = 0;
+
     public function mount(): void
     {
         $current = Shift::current();
@@ -34,6 +41,8 @@ new class extends Component
                 'visit.queueTokens.queue',
                 'invoiceServices.servicePrice.service',
                 'invoiceServices.servicePrice.doctor',
+                'patient',
+                'procedureAdmission.operationDoctor',
             ])
             ->latest('created_at');
 
@@ -54,6 +63,12 @@ new class extends Component
                 $q->whereHas('visit.patient', function (Builder $b) use ($term): void {
                     $b->where('name', 'like', '%'.$term.'%');
                 })
+                    ->orWhereHas('patient', function (Builder $b) use ($term): void {
+                        $b->where('name', 'like', '%'.$term.'%');
+                    })
+                    ->orWhereHas('procedureAdmission', function (Builder $b) use ($term): void {
+                        $b->where('package_name', 'like', '%'.$term.'%');
+                    })
                     ->orWhereHas('invoiceServices.servicePrice.doctor', function (Builder $b) use ($term): void {
                         $b->where('name', 'like', '%'.$term.'%');
                     })
@@ -77,12 +92,82 @@ new class extends Component
         $invoice = Invoice::with([
             'visit.queueTokens.queue',
             'visit.patient.family',
+            'patient.family',
+            'procedureAdmission.operationDoctor',
             'invoiceServices.servicePrice.service',
             'invoiceServices.servicePrice.doctor',
         ])->find($invoiceId);
         if ($invoice !== null) {
             app(PrintReceipt::class)->forInvoice($invoice);
         }
+    }
+
+    public function openAddPaymentModal(int $invoiceId): void
+    {
+        $invoice = Invoice::find($invoiceId);
+        if ($invoice === null || ! $invoice->isProcedure() || $invoice->remainingBalance() <= 0) {
+            return;
+        }
+        $this->addPaymentInvoiceId = $invoiceId;
+        $this->addPaymentAmount = 0;
+        $this->showAddPaymentModal = true;
+    }
+
+    public function saveAddPayment(): void
+    {
+        if ($this->addPaymentInvoiceId === null || $this->addPaymentAmount <= 0) {
+            $this->showAddPaymentModal = false;
+            $this->addPaymentInvoiceId = null;
+            $this->addPaymentAmount = 0;
+
+            return;
+        }
+
+        $invoice = Invoice::find($this->addPaymentInvoiceId);
+        if ($invoice === null || ! $invoice->isProcedure()) {
+            $this->showAddPaymentModal = false;
+            $this->addPaymentInvoiceId = null;
+            $this->addPaymentAmount = 0;
+
+            return;
+        }
+
+        $remaining = $invoice->remainingBalance();
+        if ($this->addPaymentAmount > $remaining) {
+            $this->addError('addPaymentAmount', __('Amount cannot exceed remaining balance of Rs :amount.', ['amount' => number_format($remaining)]));
+
+            return;
+        }
+
+        $shift = Shift::current();
+        $userId = auth()->id();
+
+        Payment::create([
+            'invoice_id' => $invoice->id,
+            'amount' => $this->addPaymentAmount,
+            'paid_at' => now(),
+            'shift_id' => $shift?->id,
+            'created_by' => $userId,
+        ]);
+
+        $newPaidAmount = $invoice->paid_amount + $this->addPaymentAmount;
+        $invoice->update([
+            'paid_amount' => $newPaidAmount,
+            'status' => $newPaidAmount >= $invoice->total_amount ? 'paid' : 'partialpaid',
+        ]);
+
+        $this->showAddPaymentModal = false;
+        $this->addPaymentInvoiceId = null;
+        $this->addPaymentAmount = 0;
+        $this->resetValidation();
+    }
+
+    public function closeAddPaymentModal(): void
+    {
+        $this->showAddPaymentModal = false;
+        $this->addPaymentInvoiceId = null;
+        $this->addPaymentAmount = 0;
+        $this->resetValidation();
     }
 };
 ?>
@@ -128,6 +213,7 @@ new class extends Component
     </div>
 @endplaceholder
 
+<div>
 <div class="p-6 space-y-6">
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <flux:heading size="xl" class="text-zinc-900 dark:text-zinc-50">
@@ -215,60 +301,95 @@ new class extends Component
                                 <span class="block text-xs text-zinc-500 dark:text-zinc-400">{{ $invoice->created_at->format('h:i A') }}</span>
                             </td>
                             <td class="px-5 py-4 text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                                {{ $invoice->visit?->patient?->name ?? '—' }}
-                                <span class="block text-xs font-normal text-zinc-500 dark:text-zinc-400">{{ $invoice->visit?->patient?->mr_number ?? '—' }}</span>
+                                @php
+                                    $patient = $invoice->visit?->patient ?? $invoice->patient;
+                                @endphp
+                                {{ $patient?->name ?? '—' }}
+                                <span class="block text-xs font-normal text-zinc-500 dark:text-zinc-400">{{ $patient?->mr_number ?? '—' }}</span>
                             </td>
                             <td class="px-5 py-4">
-                                <div class="flex flex-wrap gap-1.5">
-                                    @foreach ($invoice->invoiceServices as $invSvc)
-                                        @php
-                                            $svc = $invSvc->servicePrice?->service;
-                                            $token = $invoice->visit?->queueTokens->first(fn ($t) => $t->queue
-                                                && (int) $t->queue->service_id === (int) ($invSvc->servicePrice?->service_id)
-                                                && $t->queue->doctor_id === $invSvc->servicePrice?->doctor_id);
-                                        @endphp
-                                        @if ($svc)
-                                            <span
-                                                class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200 border border-emerald-200/60 dark:border-emerald-700/50"
-                                            >
-                                                {{ $svc->name }}
-                                                @if ($token)
-                                                    <span class="ml-1 font-semibold tabular-nums">#{{ $token->token_number }}</span>
-                                                @endif
-                                            </span>
+                                @if ($invoice->isProcedure())
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-200 border border-violet-200/60 dark:border-violet-700/50"
+                                    >
+                                        {{ $invoice->procedureAdmission?->package_name ?? __('Procedure') }}
+                                    </span>
+                                @else
+                                    <div class="flex flex-wrap gap-1.5">
+                                        @foreach ($invoice->invoiceServices as $invSvc)
+                                            @php
+                                                $svc = $invSvc->servicePrice?->service;
+                                                $token = $invoice->visit?->queueTokens->first(fn ($t) => $t->queue
+                                                    && (int) $t->queue->service_id === (int) ($invSvc->servicePrice?->service_id)
+                                                    && $t->queue->doctor_id === $invSvc->servicePrice?->doctor_id);
+                                            @endphp
+                                            @if ($svc)
+                                                <span
+                                                    class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200 border border-emerald-200/60 dark:border-emerald-700/50"
+                                                >
+                                                    {{ $svc->name }}
+                                                    @if ($token)
+                                                        <span class="ml-1 font-semibold tabular-nums">#{{ $token->token_number }}</span>
+                                                    @endif
+                                                </span>
+                                            @endif
+                                        @endforeach
+                                        @if ($invoice->invoiceServices->isEmpty())
+                                            <span class="text-zinc-400 dark:text-zinc-500 text-sm">—</span>
                                         @endif
-                                    @endforeach
-                                    @if ($invoice->invoiceServices->isEmpty())
-                                        <span class="text-zinc-400 dark:text-zinc-500 text-sm">—</span>
-                                    @endif
-                                </div>
+                                    </div>
+                                @endif
                             </td>
                             <td class="px-5 py-4">
-                                <div class="flex flex-wrap gap-1.5">
-                                    @foreach ($invoice->invoiceServices->pluck('servicePrice.doctor')->filter()->unique('id') as $doctor)
-                                        @if ($doctor)
-                                            <span
-                                                class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-200 border border-sky-200/60 dark:border-sky-700/50"
-                                            >
-                                                {{ $doctor->name }}
-                                            </span>
-                                        @endif
-                                    @endforeach
-                                    @if ($invoice->invoiceServices->pluck('servicePrice.doctor')->filter()->isEmpty())
+                                @if ($invoice->isProcedure())
+                                    @if ($invoice->procedureAdmission?->operationDoctor)
+                                        <span
+                                            class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-200 border border-sky-200/60 dark:border-sky-700/50"
+                                        >
+                                            {{ $invoice->procedureAdmission->operationDoctor->name }}
+                                        </span>
+                                    @else
                                         <span class="text-zinc-400 dark:text-zinc-500 text-sm">—</span>
                                     @endif
-                                </div>
+                                @else
+                                    <div class="flex flex-wrap gap-1.5">
+                                        @foreach ($invoice->invoiceServices->pluck('servicePrice.doctor')->filter()->unique('id') as $doctor)
+                                            @if ($doctor)
+                                                <span
+                                                    class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-200 border border-sky-200/60 dark:border-sky-700/50"
+                                                >
+                                                    {{ $doctor->name }}
+                                                </span>
+                                            @endif
+                                        @endforeach
+                                        @if ($invoice->invoiceServices->pluck('servicePrice.doctor')->filter()->isEmpty())
+                                            <span class="text-zinc-400 dark:text-zinc-500 text-sm">—</span>
+                                        @endif
+                                    </div>
+                                @endif
                             </td>
                             <td class="px-5 py-4 text-right">
                                 <span class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
                                     {{ number_format($invoice->total_amount) }}
                                 </span>
                                 <span class="text-zinc-500 dark:text-zinc-400 text-xs ml-0.5">PKR</span>
+                                @if ($invoice->isProcedure() && $invoice->remainingBalance() > 0)
+                                    <span class="block text-xs text-amber-600 dark:text-amber-400">
+                                        {{ __('Remaining: Rs :amount', ['amount' => number_format($invoice->remainingBalance())]) }}
+                                    </span>
+                                @endif
                             </td>
                             <td class="px-5 py-4">
-                                <flux:button size="sm" variant="ghost" wire:click="printInvoiceReceipt({{ $invoice->id }})" wire:loading.attr="disabled">
-                                    {{ __('Print receipt') }}
-                                </flux:button>
+                                <div class="flex flex-wrap gap-1">
+                                    @if ($invoice->isProcedure() && $invoice->remainingBalance() > 0)
+                                        <flux:button size="sm" variant="ghost" wire:click="openAddPaymentModal({{ $invoice->id }})" wire:loading.attr="disabled">
+                                            {{ __('Add Payment') }}
+                                        </flux:button>
+                                    @endif
+                                    <flux:button size="sm" variant="ghost" wire:click="printInvoiceReceipt({{ $invoice->id }})" wire:loading.attr="disabled">
+                                        {{ __('Print receipt') }}
+                                    </flux:button>
+                                </div>
                             </td>
                         </tr>
                     @empty
@@ -296,4 +417,22 @@ new class extends Component
             </table>
         </div>
     </flux:card>
+</div>
+
+    {{-- Add Payment modal --}}
+    <flux:modal wire:model.self="showAddPaymentModal" name="add-payment-modal" focusable class="max-w-sm">
+        <form wire:submit="saveAddPayment" class="space-y-4">
+            <flux:heading size="lg">{{ __('Add Payment') }}</flux:heading>
+            <flux:input wire:model="addPaymentAmount" label="{{ __('Amount') }}" type="number" min="1" required />
+            @error('addPaymentAmount')
+                <flux:callout variant="danger" icon="x-circle">{{ $message }}</flux:callout>
+            @enderror
+            <div class="flex justify-end gap-2">
+                <flux:button variant="filled" type="button" wire:click="closeAddPaymentModal">
+                    {{ __('Cancel') }}
+                </flux:button>
+                <flux:button variant="primary" type="submit">{{ __('Save') }}</flux:button>
+            </div>
+        </form>
+    </flux:modal>
 </div>
