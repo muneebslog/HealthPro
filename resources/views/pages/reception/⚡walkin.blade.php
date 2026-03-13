@@ -619,7 +619,7 @@ new class extends Component {
         </flux:callout>
     @endif
 
-    @if ($lastInvoiceId !== null && $lastVisitId !== null)
+    {{-- @if ($lastInvoiceId !== null && $lastVisitId !== null)
         <flux:card class="p-4 border border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-900/20">
             <flux:heading size="lg" class="mb-2">{{ __('Receipt confirmed') }}</flux:heading>
             <flux:subheading class="mb-3">
@@ -630,7 +630,7 @@ new class extends Component {
                 <flux:button variant="ghost" wire:click="dismissReceipt">{{ __('Done') }}</flux:button>
             </div>
         </flux:card>
-    @endif
+    @endif --}}
 
     <div class="grid gap-6 lg:grid-cols-3">
         <div class="lg:col-span-2 space-y-6">
@@ -670,7 +670,7 @@ new class extends Component {
                 <flux:heading size="lg" class="mb-4">{{ __('Select Service & Doctor') }}</flux:heading>
                 <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     <div>
-                        <flux:select wire:model.live="selectedServiceId" label="{{ __('Choose a service...') }}">
+                        <flux:select wire:model.live="selectedServiceId" >
                             <flux:select.option value="">{{ __('Choose a service...') }}</flux:select.option>
                             @foreach ($this->services as $svc)
                                 <flux:select.option value="{{ $svc->id }}">{{ $svc->name }}</flux:select.option>
@@ -679,7 +679,7 @@ new class extends Component {
                     </div>
                     @if ($this->selectedService && !$this->selectedService->is_standalone)
                         <div>
-                            <flux:select wire:model.live="selectedServicePriceId" label="{{ __('Choose Doctor...') }}">
+                            <flux:select wire:model.live="selectedServicePriceId" >
                                 <flux:select.option value="">{{ __('Choose Doctor...') }}</flux:select.option>
                                 @foreach ($this->servicePricesForSelectedService as $sp)
                                     <flux:select.option value="{{ $sp->id }}">{{ $sp->doctor?->name ?? '—' }} —
@@ -699,7 +699,7 @@ new class extends Component {
                             </flux:button>
                         </div>
                     @endif
-                    @if ($selectedServicePriceId !== null && $this->selectedService && !$this->selectedService->is_standalone)
+                    {{-- @if ($selectedServicePriceId !== null && $this->selectedService && !$this->selectedService->is_standalone)
                         <div class="flex items-end gap-2">
                             <div class="flex-1">
                                 <flux:subheading class="mb-1">{{ __('Price') }}</flux:subheading>
@@ -709,7 +709,7 @@ new class extends Component {
                                 {{ __('Edit') }}
                             </flux:button>
                         </div>
-                    @endif
+                    @endif --}}
                     <div class="sm:col-span-2 lg:col-span-1 flex items-end">
                         <flux:button variant="primary" wire:click="addService" {{--
                             disabled="{{ $selectedPatientId === null || $selectedServicePriceId === null || $selectedPrice === '' ? 'true' : 'false' }}"
