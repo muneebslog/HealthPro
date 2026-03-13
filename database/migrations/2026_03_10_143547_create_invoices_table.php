@@ -15,12 +15,10 @@ return new class extends Migration
 
         Schema::create('invoices', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('patient_id');
-            $table->foreign('patient_id')->references('id')->on('patients');
-            $table->bigInteger('visit_id');
-            $table->foreign('visit_id')->references('id')->on('visits');
+            $table->foreignId('patient_id')->constrained('patients');
+            $table->foreignId('visit_id')->constrained('visits');
             $table->integer('total_amount');
-            $table->enum('status', ["unpaid","paid","partialpaid"]);
+            $table->enum('status', ['unpaid', 'paid', 'partialpaid']);
             $table->timestamps();
         });
 

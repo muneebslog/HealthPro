@@ -15,7 +15,6 @@ return new class extends Migration
 
         Schema::create('invoice_services', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('serviceprice_id');
             $table->foreignId('service_price_id')->constrained('service_prices');
             $table->foreignId('invoice_id')->constrained('invoices');
             $table->integer('price');

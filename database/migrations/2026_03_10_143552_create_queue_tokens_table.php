@@ -15,12 +15,9 @@ return new class extends Migration
 
         Schema::create('queue_tokens', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('queue_id');
-            $table->foreign('queue_id')->references('id')->on('queues');
-            $table->bigInteger('visit_id');
-            $table->foreign('visit_id')->references('id')->on('visits');
-            $table->bigInteger('patient_id');
-            $table->foreign('patient_id')->references('id')->on('patients');
+            $table->foreignId('queue_id')->constrained('queues');
+            $table->foreignId('visit_id')->constrained('visits');
+            $table->foreignId('patient_id')->constrained('patients');
             $table->integer('token_number');
             $table->enum('status', ['reserved', 'waiting', 'called', 'completed', 'skipped', 'cancelled']);
             $table->timestamp('reserved_at');

@@ -16,11 +16,10 @@ return new class extends Migration
         Schema::create('patients', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->enum('gender', ["male","female"]);
+            $table->enum('gender', ['male', 'female']);
             $table->date('dob');
             $table->string('relation_to_head');
-            $table->bigInteger('family_id');
-            $table->foreign('family_id')->references('id')->on('families');
+            $table->foreignId('family_id')->constrained('families');
             $table->timestamps();
         });
 

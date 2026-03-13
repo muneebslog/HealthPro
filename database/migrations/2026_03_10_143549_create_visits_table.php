@@ -15,9 +15,8 @@ return new class extends Migration
 
         Schema::create('visits', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('patient_id');
-            $table->foreign('patient_id')->references('id')->on('patients');
-            $table->enum('status', ["reserved","confirmed","completed","cancelled"]);
+            $table->foreignId('patient_id')->constrained('patients');
+            $table->enum('status', ['reserved', 'confirmed', 'completed', 'cancelled']);
             $table->timestamps();
         });
 
