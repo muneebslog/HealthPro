@@ -714,7 +714,7 @@ new class extends Component {
                         <flux:button variant="primary" wire:click="addService" {{--
                             disabled="{{ $selectedPatientId === null || $selectedServicePriceId === null || $selectedPrice === '' ? 'true' : 'false' }}"
                             --}}>
-                            {{ __('Add Service') }}
+                            {{ __('Add') }}
                         </flux:button>
                     </div>
                 </div>
@@ -787,7 +787,7 @@ new class extends Component {
                 <flux:button icon="printer" variant="primary" class="w-full justify-center"
                     wire:click="confirmAndPrintReceipt" {{--
                     disabled="{{ $selectedPatientId === null || empty($activeRows) ? 'true' : 'false' }}" --}}>
-                    {{ __('Confirm & Print Receipt') }}
+                    {{ __('Confirm') }}
                 </flux:button>
                 <flux:link wire:click="clearSession" class="mt-3 inline-block text-sm cursor-pointer">
                     {{ __('Clear Session') }}
