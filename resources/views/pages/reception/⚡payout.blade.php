@@ -251,6 +251,7 @@ new class extends Component
                                         <td class="px-4 py-3 whitespace-nowrap">{{ $invoice?->created_at?->format('M j, Y H:i') ?? '—' }}</td>
                                         <td class="px-4 py-3">
                                             {{ $invoice?->visit?->patient?->name ?? '—' }}
+                                            <span class="block text-xs text-zinc-500 dark:text-zinc-400">{{ $invoice?->visit?->patient?->mr_number ?? '—' }}</span>
                                             <span class="block text-xs text-zinc-500 dark:text-zinc-400">#{{ $invoice?->id ?? '—' }}</span>
                                         </td>
                                         <td class="px-4 py-3">{{ $invSvc->servicePrice?->service?->name ?? '—' }}</td>

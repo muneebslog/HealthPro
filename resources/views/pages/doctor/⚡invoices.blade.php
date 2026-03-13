@@ -175,7 +175,10 @@ new class extends Component
                                 {{ $row->invoice_service->invoice?->created_at?->format('M j, Y') }}
                                 <span class="block text-xs text-zinc-500 dark:text-zinc-400">{{ $row->invoice_service->invoice?->created_at?->format('h:i A') }}</span>
                             </td>
-                            <td class="px-5 py-4 text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $row->invoice_service->invoice?->visit?->patient?->name ?? '—' }}</td>
+                            <td class="px-5 py-4 text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                                {{ $row->invoice_service->invoice?->visit?->patient?->name ?? '—' }}
+                                <span class="block text-xs font-normal text-zinc-500 dark:text-zinc-400">{{ $row->invoice_service->invoice?->visit?->patient?->mr_number ?? '—' }}</span>
+                            </td>
                             <td class="px-5 py-4 text-sm text-zinc-700 dark:text-zinc-300">{{ $row->invoice_service->servicePrice?->service?->name ?? '—' }}</td>
                             <td class="px-5 py-4 text-sm tabular-nums text-zinc-700 dark:text-zinc-300">{{ $token ? '#'.$token->token_number : '—' }}</td>
                             <td class="px-5 py-4 text-sm text-right text-zinc-700 dark:text-zinc-300">{{ number_format($row->invoice_service->final_amount) }} PKR</td>

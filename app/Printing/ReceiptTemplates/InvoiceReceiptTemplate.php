@@ -3,6 +3,7 @@
 namespace App\Printing\ReceiptTemplates;
 
 use App\Models\Invoice;
+use App\Models\Patient;
 
 class InvoiceReceiptTemplate extends AbstractReceiptTemplate
 {
@@ -20,15 +21,23 @@ class InvoiceReceiptTemplate extends AbstractReceiptTemplate
         $invoice = $this->invoice->loadMissing([
             'visit.queueTokens.queue',
             'visit.patient.family',
+            'patient.family',
             'invoiceServices.servicePrice.service',
             'invoiceServices.servicePrice.doctor',
         ]);
 
         $out = '';
 
-        $patient = $invoice->visit?->patient;
+        $patient = $invoice->patient ?? $invoice->visit?->patient;
+        $mrNumber = $patient?->mr_number;
+        if ($patient !== null && ($mrNumber === null || $mrNumber === '')) {
+            $patient->mr_number = Patient::generateMrNumber();
+            $patient->saveQuietly();
+            $mrNumber = $patient->mr_number;
+        }
+
         $out .= 'Patient: '.($patient?->name ?? '—')."\n";
-        $out .= 'MR#: '.($patient?->mr_number ?? '—')."\n";
+        $out .= 'MR#: '.($mrNumber ?? '—')."\n";
         $phone = $patient?->family?->phone ?? '';
         if ($phone !== '') {
             $out .= 'Phone: '.$phone."\n";

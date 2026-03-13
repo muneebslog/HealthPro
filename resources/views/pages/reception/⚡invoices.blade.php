@@ -216,6 +216,7 @@ new class extends Component
                             </td>
                             <td class="px-5 py-4 text-sm font-medium text-zinc-900 dark:text-zinc-100">
                                 {{ $invoice->visit?->patient?->name ?? '—' }}
+                                <span class="block text-xs font-normal text-zinc-500 dark:text-zinc-400">{{ $invoice->visit?->patient?->mr_number ?? '—' }}</span>
                             </td>
                             <td class="px-5 py-4">
                                 <div class="flex flex-wrap gap-1.5">
