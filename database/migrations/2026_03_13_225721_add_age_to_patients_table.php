@@ -1,0 +1,36 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('patients', function (Blueprint $table): void {
+            $table->unsignedTinyInteger('age')->nullable()->after('gender');
+        });
+
+        DB::table('patients')
+            ->whereNotNull('dob')
+            ->whereNull('age')
+            ->update([
+                'age' => DB::raw('TIMESTAMPDIFF(YEAR, dob, CURDATE())'),
+            ]);
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('patients', function (Blueprint $table): void {
+            $table->dropColumn('age');
+        });
+    }
+};

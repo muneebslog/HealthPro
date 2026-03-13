@@ -60,10 +60,10 @@ new class extends Component
     #[Rule('required|in:male,female')]
     public string $newPatientGender = 'male';
 
-    #[Rule('required|date')]
-    public string $newPatientDob = '';
+    #[Rule('required|integer|min:0|max:120')]
+    public int $newPatientAge = 0;
 
-    #[Rule('required|string|max:255')]
+    #[Rule('required|in:self,son,daughter,brother,sister,wife,husband,others,random')]
     public string $newPatientRelationToHead = 'self';
 
     public ?int $lastInvoiceId = null;
@@ -281,7 +281,7 @@ new class extends Component
         $this->resetValidation();
         $this->newPatientName = '';
         $this->newPatientGender = 'male';
-        $this->newPatientDob = '';
+        $this->newPatientAge = 0;
         $this->newPatientRelationToHead = 'self';
         $this->showNewPatientModal = true;
     }
@@ -303,10 +303,14 @@ new class extends Component
             ]);
             $this->familyId = $family->id;
         }
+        $age = (int) $this->newPatientAge;
+        $dob = now()->subYears($age)->startOfDay();
+
         $patient = Patient::create([
             'name' => $this->newPatientName,
             'gender' => $this->newPatientGender,
-            'dob' => $this->newPatientDob,
+            'age' => $age,
+            'dob' => $dob->toDateString(),
             'relation_to_head' => $this->newPatientRelationToHead,
             'family_id' => $family->id,
         ]);
@@ -315,7 +319,7 @@ new class extends Component
         }
         $this->selectedPatientId = $patient->id;
         $this->showNewPatientModal = false;
-        $this->reset('newPatientName', 'newPatientGender', 'newPatientDob', 'newPatientRelationToHead');
+        $this->reset('newPatientName', 'newPatientGender', 'newPatientAge', 'newPatientRelationToHead');
     }
 
     public function reserveSlot(): void
@@ -650,8 +654,21 @@ new class extends Component
                     <option value="female">{{ __('Female') }}</option>
                 </select>
             </div>
-            <flux:input wire:model="newPatientDob" label="{{ __('Date of birth') }}" type="date" required />
-            <flux:input wire:model="newPatientRelationToHead" label="{{ __('Relation to head') }}" placeholder="self, spouse, child..." />
+            <flux:input wire:model="newPatientAge" label="{{ __('Age') }}" type="number" min="0" max="120" required />
+            <div>
+                <label class="flux-label block text-sm font-medium mb-1">{{ __('Relation to head') }}</label>
+                <select wire:model="newPatientRelationToHead" class="flux-input w-full rounded-lg border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800" required>
+                    <option value="self">{{ __('Self') }}</option>
+                    <option value="son">{{ __('Son') }}</option>
+                    <option value="daughter">{{ __('Daughter') }}</option>
+                    <option value="brother">{{ __('Brother') }}</option>
+                    <option value="sister">{{ __('Sister') }}</option>
+                    <option value="wife">{{ __('Wife') }}</option>
+                    <option value="husband">{{ __('Husband') }}</option>
+                    <option value="others">{{ __('Others') }}</option>
+                    <option value="random">{{ __('Random') }}</option>
+                </select>
+            </div>
             @if ($errors->isNotEmpty())
                 <flux:callout variant="danger" icon="x-circle">
                     {{ $errors->first() }}

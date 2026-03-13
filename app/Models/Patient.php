@@ -59,6 +59,7 @@ class Patient extends Model
         'mr_number',
         'name',
         'gender',
+        'age',
         'dob',
         'relation_to_head',
         'family_id',
@@ -73,6 +74,7 @@ class Patient extends Model
     {
         return [
             'id' => 'integer',
+            'age' => 'integer',
             'dob' => 'date',
             'family_id' => 'integer',
         ];

@@ -12,10 +12,13 @@ class PatientFactory extends Factory
      */
     public function definition(): array
     {
+        $dob = fake()->dateTimeBetween('-80 years', '-1 year');
+
         return [
             'name' => fake()->name(),
             'gender' => fake()->randomElement(["male","female"]),
-            'dob' => fake()->date(),
+            'age' => (int) now()->diffInYears($dob),
+            'dob' => $dob->format('Y-m-d'),
             'relation_to_head' => fake()->word(),
             'family_id' => Family::factory(),
         ];
