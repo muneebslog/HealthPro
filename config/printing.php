@@ -12,7 +12,7 @@ return [
     |
     */
 
-    'default_printer_port' => env('RECEIPT_PRINTER_PORT', 'COM8'),
+    'default_printer_port' => env('RECEIPT_PRINTER_PORT', 'COM6'),
 
     /*
     |--------------------------------------------------------------------------

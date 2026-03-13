@@ -16,12 +16,7 @@ return new class extends Migration
             $table->unsignedTinyInteger('age')->nullable()->after('gender');
         });
 
-        DB::table('patients')
-            ->whereNotNull('dob')
-            ->whereNull('age')
-            ->update([
-                'age' => DB::raw('TIMESTAMPDIFF(YEAR, dob, CURDATE())'),
-            ]);
+       
     }
 
     /**
