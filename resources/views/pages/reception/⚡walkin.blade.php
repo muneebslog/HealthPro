@@ -17,8 +17,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\Attributes\Rule;
 
-new class extends Component
-{
+new class extends Component {
     public string $phone = '';
 
     public ?int $selectedPatientId = null;
@@ -62,7 +61,17 @@ new class extends Component
 
     public function updatedPhone(): void
     {
-        $this->lookupFamily();
+        $normalized = preg_replace('/\D/', '', $this->phone);
+        if ($normalized === '') {
+            $this->familyId = null;
+            $this->selectedPatientId = null;
+
+            return;
+        }
+
+        if (strlen($normalized) === 11) {
+            $this->lookupFamily();
+        }
     }
 
     public function lookupFamily(): void
@@ -80,7 +89,7 @@ new class extends Component
             $this->familyId = $family->id;
             if ($this->selectedPatientId !== null) {
                 $stillExists = $family->patients->contains('id', $this->selectedPatientId);
-                if (! $stillExists) {
+                if (!$stillExists) {
                     $this->selectedPatientId = null;
                 }
             }
@@ -189,6 +198,11 @@ new class extends Component
         }
         $serviceId = $sp->service_id;
         $doctorId = $sp->doctor_id;
+        foreach ($this->activeRows as $row) {
+            if ($row['service_id'] === $serviceId && $row['doctor_id'] === $doctorId) {
+                return;
+            }
+        }
         $tokenNum = $this->getNextTokenFor($serviceId, $doctorId);
         $serviceName = $sp->service->name ?? 'Service';
         $doctorName = $sp->doctor?->name ?? '—';
@@ -196,7 +210,7 @@ new class extends Component
         if ($prefix === '') {
             $prefix = 'SV';
         }
-        $tokenDisplay = $prefix.'-'.$tokenNum;
+        $tokenDisplay = $prefix . '-' . $tokenNum;
         $this->activeRows[] = [
             'id' => uniqid('row', true),
             'service_id' => $serviceId,
@@ -365,7 +379,7 @@ new class extends Component
             }
             $prefix = strtoupper(substr($row['service_name'], 0, 2)) ?: 'SV';
             $this->activeRows[$index]['token_number'] = $tokenNum;
-            $this->activeRows[$index]['token_display'] = $prefix.'-'.$tokenNum;
+            $this->activeRows[$index]['token_display'] = $prefix . '-' . $tokenNum;
         }
     }
 
@@ -546,44 +560,44 @@ new class extends Component
 ?>
 
 @placeholder
-    <div class="p-6 space-y-6">
-        <flux:skeleton.group animate="shimmer" class="space-y-6">
-            <flux:skeleton.line class="h-8 w-56" />
-            <div class="grid gap-6 lg:grid-cols-3">
-                <div class="lg:col-span-2 space-y-6">
-                    <flux:card class="p-5">
-                        <flux:skeleton.line class="mb-4 w-40" />
-                        <flux:skeleton class="h-10 w-full rounded-lg mb-4" />
-                        <div class="flex gap-2">
-                            <flux:skeleton class="h-8 w-24 rounded-full" />
-                            <flux:skeleton class="h-8 w-28 rounded-full" />
-                        </div>
-                    </flux:card>
-                    <flux:card class="p-5">
-                        <flux:skeleton.line class="mb-4 w-44" />
-                        <div class="grid gap-4 sm:grid-cols-2">
-                            <flux:skeleton class="h-10 rounded-lg" />
-                            <flux:skeleton class="h-10 rounded-lg" />
-                        </div>
-                    </flux:card>
-                    <flux:card class="p-5">
-                        <flux:skeleton.line class="mb-4 w-32" />
-                        <flux:skeleton.line class="mb-2 w-full" />
-                        <flux:skeleton.line class="mb-2 w-4/5" />
-                        <flux:skeleton.line class="w-2/3" />
-                    </flux:card>
-                </div>
-                <div>
-                    <flux:card class="p-5">
-                        <flux:skeleton.line class="mb-4 w-36" />
-                        <flux:skeleton.line class="mb-2 w-full" />
-                        <flux:skeleton.line class="mb-4 w-3/4" />
-                        <flux:skeleton class="h-10 w-full rounded-lg" />
-                    </flux:card>
-                </div>
+<div class="p-6 space-y-6">
+    <flux:skeleton.group animate="shimmer" class="space-y-6">
+        <flux:skeleton.line class="h-8 w-56" />
+        <div class="grid gap-6 lg:grid-cols-3">
+            <div class="lg:col-span-2 space-y-6">
+                <flux:card class="p-5">
+                    <flux:skeleton.line class="mb-4 w-40" />
+                    <flux:skeleton class="h-10 w-full rounded-lg mb-4" />
+                    <div class="flex gap-2">
+                        <flux:skeleton class="h-8 w-24 rounded-full" />
+                        <flux:skeleton class="h-8 w-28 rounded-full" />
+                    </div>
+                </flux:card>
+                <flux:card class="p-5">
+                    <flux:skeleton.line class="mb-4 w-44" />
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <flux:skeleton class="h-10 rounded-lg" />
+                        <flux:skeleton class="h-10 rounded-lg" />
+                    </div>
+                </flux:card>
+                <flux:card class="p-5">
+                    <flux:skeleton.line class="mb-4 w-32" />
+                    <flux:skeleton.line class="mb-2 w-full" />
+                    <flux:skeleton.line class="mb-2 w-4/5" />
+                    <flux:skeleton.line class="w-2/3" />
+                </flux:card>
             </div>
-        </flux:skeleton.group>
-    </div>
+            <div>
+                <flux:card class="p-5">
+                    <flux:skeleton.line class="mb-4 w-36" />
+                    <flux:skeleton.line class="mb-2 w-full" />
+                    <flux:skeleton.line class="mb-4 w-3/4" />
+                    <flux:skeleton class="h-10 w-full rounded-lg" />
+                </flux:card>
+            </div>
+        </div>
+    </flux:skeleton.group>
+</div>
 @endplaceholder
 
 <div class="p-6 space-y-6">
@@ -592,12 +606,14 @@ new class extends Component
     </div>
 
     @if ($this->currentShift === null)
-        <flux:callout variant="danger" icon="exclamation-triangle" class="border-amber-500/50 bg-amber-50 dark:bg-amber-950/30">
+        <flux:callout variant="danger" icon="exclamation-triangle"
+            class="border-amber-500/50 bg-amber-50 dark:bg-amber-950/30">
             <flux:heading size="md">{{ __('No shift is open') }}</flux:heading>
             <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
                 {{ __('You must open a shift before registering walk-in patients and printing receipts.') }}
             </p>
-            <flux:link :href="route('reception.shift')" wire:navigate class="mt-3 inline-flex font-medium text-amber-700 dark:text-amber-300 hover:underline">
+            <flux:link :href="route('reception.shift')" wire:navigate
+                class="mt-3 inline-flex font-medium text-amber-700 dark:text-amber-300 hover:underline">
                 {{ __('Open a shift') }}
             </flux:link>
         </flux:callout>
@@ -606,7 +622,9 @@ new class extends Component
     @if ($lastInvoiceId !== null && $lastVisitId !== null)
         <flux:card class="p-4 border border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-900/20">
             <flux:heading size="lg" class="mb-2">{{ __('Receipt confirmed') }}</flux:heading>
-            <flux:subheading class="mb-3">{{ __('Invoice #:id · Visit #:visit', ['id' => $lastInvoiceId, 'visit' => $lastVisitId]) }}</flux:subheading>
+            <flux:subheading class="mb-3">
+                {{ __('Invoice #:id · Visit #:visit', ['id' => $lastInvoiceId, 'visit' => $lastVisitId]) }}
+            </flux:subheading>
             <div class="flex gap-2">
                 <flux:button variant="primary" wire:click="printReceipt">{{ __('Print receipt') }}</flux:button>
                 <flux:button variant="ghost" wire:click="dismissReceipt">{{ __('Done') }}</flux:button>
@@ -621,14 +639,9 @@ new class extends Component
                 <flux:heading size="lg" class="mb-4">{{ __('Patient Information') }}</flux:heading>
                 <div class="space-y-4">
                     <div class="relative">
-                        <flux:input
-                        icon="phone"
-                            wire:model.live.debounce.400ms="phone"
-                            label="{{ __('Patient Phone Number') }}"
-                            type="tel"
-                            placeholder="0308-4447764"
-                            class="pe-10"
-                        />
+                        <flux:input icon="phone" wire:model.live.debounce.400ms="phone"
+                            label="{{ __('Patient Phone Number') }}" mask="9999-99999999" placeholder="0320-8489685"
+                            class="pe-10" />
                     </div>
                     @if ($phone !== '')
                         <div class="flex flex-wrap gap-2 items-center">
@@ -636,11 +649,8 @@ new class extends Component
                                 @php
                                     $isHead = $this->family && $this->family->head_id === $patient->id;
                                 @endphp
-                                <button
-                                    type="button"
-                                    wire:click="$set('selectedPatientId', {{ $patient->id }})"
-                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition {{ $selectedPatientId === $patient->id ? 'bg-blue-600 text-white' : 'bg-zinc-100 dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100' }}"
-                                >
+                                <button type="button" wire:click="$set('selectedPatientId', {{ $patient->id }})"
+                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition {{ $selectedPatientId === $patient->id ? 'bg-blue-600 text-white' : 'bg-zinc-100 dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100' }}">
                                     {{ $patient->name }}
                                     @if ($isHead)
                                         <span class="text-xs opacity-90">({{ __('Primary') }})</span>
@@ -667,12 +677,13 @@ new class extends Component
                             @endforeach
                         </flux:select>
                     </div>
-                    @if ($this->selectedService && ! $this->selectedService->is_standalone)
+                    @if ($this->selectedService && !$this->selectedService->is_standalone)
                         <div>
                             <flux:select wire:model.live="selectedServicePriceId" label="{{ __('Choose Doctor...') }}">
                                 <flux:select.option value="">{{ __('Choose Doctor...') }}</flux:select.option>
                                 @foreach ($this->servicePricesForSelectedService as $sp)
-                                    <flux:select.option value="{{ $sp->id }}">{{ $sp->doctor?->name ?? '—' }} — {{ number_format($sp->price) }}</flux:select.option>
+                                    <flux:select.option value="{{ $sp->id }}">{{ $sp->doctor?->name ?? '—' }} —
+                                        {{ number_format($sp->price) }}</flux:select.option>
                                 @endforeach
                             </flux:select>
                         </div>
@@ -688,7 +699,7 @@ new class extends Component
                             </flux:button>
                         </div>
                     @endif
-                    @if ($selectedServicePriceId !== null && $this->selectedService && ! $this->selectedService->is_standalone)
+                    @if ($selectedServicePriceId !== null && $this->selectedService && !$this->selectedService->is_standalone)
                         <div class="flex items-end gap-2">
                             <div class="flex-1">
                                 <flux:subheading class="mb-1">{{ __('Price') }}</flux:subheading>
@@ -700,11 +711,9 @@ new class extends Component
                         </div>
                     @endif
                     <div class="sm:col-span-2 lg:col-span-1 flex items-end">
-                        <flux:button
-                            variant="primary"
-                            wire:click="addService"
-                            {{-- disabled="{{ $selectedPatientId === null || $selectedServicePriceId === null || $selectedPrice === '' ? 'true' : 'false' }}" --}}
-                        >
+                        <flux:button variant="primary" wire:click="addService" {{--
+                            disabled="{{ $selectedPatientId === null || $selectedServicePriceId === null || $selectedPrice === '' ? 'true' : 'false' }}"
+                            --}}>
                             {{ __('Add Service') }}
                         </flux:button>
                     </div>
@@ -721,7 +730,8 @@ new class extends Component
                         <table class="w-full text-left">
                             <thead>
                                 <tr class="border-b border-zinc-200 dark:border-zinc-700">
-                                    <th class="pb-2 text-xs font-semibold uppercase text-zinc-500">{{ __('SERVICE NAME') }}</th>
+                                    <th class="pb-2 text-xs font-semibold uppercase text-zinc-500">{{ __('SERVICE NAME') }}
+                                    </th>
                                     <th class="pb-2 text-xs font-semibold uppercase text-zinc-500">{{ __('DOCTOR') }}</th>
                                     <th class="pb-2 text-xs font-semibold uppercase text-zinc-500">{{ __('TOKEN') }}</th>
                                     <th class="pb-2 text-xs font-semibold uppercase text-zinc-500">{{ __('PRICE') }}</th>
@@ -730,17 +740,20 @@ new class extends Component
                             </thead>
                             <tbody>
                                 @foreach ($activeRows as $index => $row)
-                                    <tr class="border-b border-zinc-100 dark:border-zinc-700/50" wire:key="row-{{ $row['id'] }}">
+                                    <tr class="border-b border-zinc-100 dark:border-zinc-700/50"
+                                        wire:key="row-{{ $row['id'] }}">
                                         <td class="py-3">{{ $row['service_name'] }}</td>
                                         <td class="py-3">{{ $row['doctor_name'] }}</td>
                                         <td class="py-3">
-                                            <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200">
+                                            <span
+                                                class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200">
                                                 {{ $row['token_display'] }}
                                             </span>
                                         </td>
                                         <td class="py-3">${{ number_format($row['price'], 2) }}</td>
                                         <td class="py-3 flex items-center gap-1">
-                                            <flux:button variant="ghost" size="sm" wire:click="openEditPriceModal({{ $index }})">
+                                            <flux:button variant="ghost" size="sm"
+                                                wire:click="openEditPriceModal({{ $index }})">
                                                 <flux:icon.pencil-square class="size-4" />
                                             </flux:button>
                                             <flux:button variant="ghost" size="sm" wire:click="removeRow({{ $index }})">
@@ -765,18 +778,15 @@ new class extends Component
                         <span class="text-zinc-500">{{ __('Subtotal') }}</span>
                         <span>${{ number_format($this->subtotal, 2) }}</span>
                     </div>
-                    <div class="flex justify-between text-lg font-bold text-blue-600 dark:text-blue-400 pt-2 border-t border-zinc-200 dark:border-zinc-700">
+                    <div
+                        class="flex justify-between text-lg font-bold text-blue-600 dark:text-blue-400 pt-2 border-t border-zinc-200 dark:border-zinc-700">
                         <span>{{ __('Total Bill') }}</span>
                         <span>${{ number_format($this->subtotal, 2) }}</span>
                     </div>
                 </div>
-                <flux:button
-                    icon="printer"
-                    variant="primary"
-                    class="w-full justify-center"
-                    wire:click="confirmAndPrintReceipt"
-                    {{-- disabled="{{ $selectedPatientId === null || empty($activeRows) ? 'true' : 'false' }}" --}}
-                >
+                <flux:button icon="printer" variant="primary" class="w-full justify-center"
+                    wire:click="confirmAndPrintReceipt" {{--
+                    disabled="{{ $selectedPatientId === null || empty($activeRows) ? 'true' : 'false' }}" --}}>
                     {{ __('Confirm & Print Receipt') }}
                 </flux:button>
                 <flux:link wire:click="clearSession" class="mt-3 inline-block text-sm cursor-pointer">
@@ -786,60 +796,62 @@ new class extends Component
         </div>
     </div>
 
-            {{-- New patient modal --}}
+    {{-- New patient modal --}}
 
-        <flux:modal wire:model.self="showNewPatientModal" name="new-patient-modal" focusable class="max-w-xl">
-            <form wire:submit="saveNewPatient" class="space-y-4">
-                <flux:heading size="lg">{{ __('Add New Member') }}</flux:heading>
-                <flux:input wire:model="newPatientName" label="{{ __('Name') }}" required />
-                <div>
-                    <label class="flux-label block text-sm font-medium mb-1">{{ __('Gender') }}</label>
-                    <select wire:model="newPatientGender" class="flux-input w-full rounded-lg border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800" required>
-                        <option value="male">{{ __('Male') }}</option>
-                        <option value="female">{{ __('Female') }}</option>
-                    </select>
-                </div>
-                <flux:input wire:model="newPatientAge" label="{{ __('Age') }}" type="number" min="0" max="120" required />
-                <div>
-                    <label class="flux-label block text-sm font-medium mb-1">{{ __('Relation to head') }}</label>
-                    <select wire:model="newPatientRelationToHead" class="flux-input w-full rounded-lg border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800" required>
-                        <option value="self">{{ __('Self') }}</option>
-                        <option value="son">{{ __('Son') }}</option>
-                        <option value="daughter">{{ __('Daughter') }}</option>
-                        <option value="brother">{{ __('Brother') }}</option>
-                        <option value="sister">{{ __('Sister') }}</option>
-                        <option value="wife">{{ __('Wife') }}</option>
-                        <option value="husband">{{ __('Husband') }}</option>
-                        <option value="others">{{ __('Others') }}</option>
-                        <option value="random">{{ __('Random') }}</option>
-                    </select>
-                </div>
-                @if ($errors->isNotEmpty())
-                    <flux:callout variant="danger" icon="x-circle">
-                        {{ $errors->first() }}
-                    </flux:callout>
-                @endif
-                <div class="flex justify-end gap-2">
-                    <flux:button variant="filled" type="button" wire:click="$set('showNewPatientModal', false)">
-                        {{ __('Cancel') }}
-                    </flux:button>
-                    <flux:button variant="primary" type="submit">{{ __('Save') }}</flux:button>
-                </div>
-            </form>
-        </flux:modal>
+    <flux:modal wire:model.self="showNewPatientModal" name="new-patient-modal" focusable class="max-w-xl">
+        <form wire:submit="saveNewPatient" class="space-y-4">
+            <flux:heading size="lg">{{ __('Add New Member') }}</flux:heading>
+            <flux:input wire:model="newPatientName" label="{{ __('Name') }}" required />
+            <div>
+                <label class="flux-label block text-sm font-medium mb-1">{{ __('Gender') }}</label>
+                <select wire:model="newPatientGender"
+                    class="flux-input w-full rounded-lg border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800" required>
+                    <option value="male">{{ __('Male') }}</option>
+                    <option value="female">{{ __('Female') }}</option>
+                </select>
+            </div>
+            <flux:input wire:model="newPatientAge" label="{{ __('Age') }}" type="number" min="0" max="120" required />
+            <div>
+                <label class="flux-label block text-sm font-medium mb-1">{{ __('Relation to head') }}</label>
+                <select wire:model="newPatientRelationToHead"
+                    class="flux-input w-full rounded-lg border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800" required>
+                    <option value="self">{{ __('Self') }}</option>
+                    <option value="son">{{ __('Son') }}</option>
+                    <option value="daughter">{{ __('Daughter') }}</option>
+                    <option value="brother">{{ __('Brother') }}</option>
+                    <option value="sister">{{ __('Sister') }}</option>
+                    <option value="wife">{{ __('Wife') }}</option>
+                    <option value="husband">{{ __('Husband') }}</option>
+                    <option value="others">{{ __('Others') }}</option>
+                    <option value="random">{{ __('Random') }}</option>
+                </select>
+            </div>
+            @if ($errors->isNotEmpty())
+                <flux:callout variant="danger" icon="x-circle">
+                    {{ $errors->first() }}
+                </flux:callout>
+            @endif
+            <div class="flex justify-end gap-2">
+                <flux:button variant="filled" type="button" wire:click="$set('showNewPatientModal', false)">
+                    {{ __('Cancel') }}
+                </flux:button>
+                <flux:button variant="primary" type="submit">{{ __('Save') }}</flux:button>
+            </div>
+        </form>
+    </flux:modal>
 
 
     {{-- Edit price modal (for selection or row) --}}
-        <flux:modal wire:model.self="showEditPriceModal" name="edit-price-modal"  focusable class="max-w-sm">
-            <form wire:submit="saveEditPrice" class="space-y-4">
-                <flux:heading size="lg">{{ __('Edit Price') }}</flux:heading>
-                <flux:input wire:model="editPriceValue" label="{{ __('Price') }}" type="number" min="0" step="1" />
-                <div class="flex justify-end gap-2">
-                    <flux:button variant="filled" type="button" wire:click="$set('showEditPriceModal', false)">
-                        {{ __('Cancel') }}
-                    </flux:button>
-                    <flux:button variant="primary" type="submit">{{ __('Save') }}</flux:button>
-                </div>
-            </form>
-        </flux:modal>
+    <flux:modal wire:model.self="showEditPriceModal" name="edit-price-modal" focusable class="max-w-sm">
+        <form wire:submit="saveEditPrice" class="space-y-4">
+            <flux:heading size="lg">{{ __('Edit Price') }}</flux:heading>
+            <flux:input wire:model="editPriceValue" label="{{ __('Price') }}" type="number" min="0" step="1" />
+            <div class="flex justify-end gap-2">
+                <flux:button variant="filled" type="button" wire:click="$set('showEditPriceModal', false)">
+                    {{ __('Cancel') }}
+                </flux:button>
+                <flux:button variant="primary" type="submit">{{ __('Save') }}</flux:button>
+            </div>
+        </form>
+    </flux:modal>
 </div>

@@ -72,7 +72,17 @@ new class extends Component
 
     public function updatedPhone(): void
     {
-        $this->lookupFamily();
+        $normalized = preg_replace('/\D/', '', $this->phone);
+        if ($normalized === '') {
+            $this->familyId = null;
+            $this->selectedPatientId = null;
+
+            return;
+        }
+
+        if (strlen($normalized) === 11) {
+            $this->lookupFamily();
+        }
     }
 
     public function lookupFamily(): void
@@ -575,7 +585,8 @@ new class extends Component
                 wire:model.live.debounce.400ms="phone"
                 label="{{ __('Patient Phone Number') }}"
                 type="tel"
-                placeholder="0308-4447764"
+                mask="9999-99999999"
+                placeholder="0320-8489685"
             />
             @if ($phone !== '')
                 <div class="flex flex-wrap gap-2 items-center">
