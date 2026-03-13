@@ -38,6 +38,8 @@ test('invoice receipt template includes header and footer', function () {
     expect($text)->toContain('Invoice');
     expect($text)->toContain('Thanks for coming.');
     expect($text)->toContain('Contact :');
+    expect($text)->toContain('MR#:');
+    expect($text)->toContain($patient->fresh()->mr_number);
 });
 
 test('invoice receipt template includes Rx and blank lines only when doctor_id 1 and service_id 1', function () {

@@ -48,7 +48,7 @@ class PrintReceipt
         $printer = $this->connectorFactory->printer($port);
         try {
             $printer->setJustification(EscposPrinter::JUSTIFY_CENTER);
-            $printer->setTextSize($defaultSize + 2, $defaultSize + 2);
+            $printer->setTextSize($defaultSize + 2, $defaultSize + 2); // 3
             $printer->setEmphasis(true);
             $printer->text("HEALTH PRO\n");
 
@@ -56,7 +56,7 @@ class PrintReceipt
             $printer->setEmphasis(false);
             $printer->text('Date: '.now()->format('d M H:i')."   \n");
 
-            $printer->setTextSize($defaultSize + 1, $defaultSize + 1);
+            $printer->setTextSize($defaultSize + 1, $defaultSize + 1); // 2
             $printer->setEmphasis(true);
             $printer->text("PRINTER TEST\n\n");
 

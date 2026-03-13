@@ -22,6 +22,26 @@
                     @endif
                 </flux:sidebar.group>
 
+                @if(auth()->user()?->role === \App\Enums\UserRole::Doc)
+                    <flux:sidebar.group :heading="__('Doctor portal')" class="grid">
+                        <flux:sidebar.item icon="layout-grid" :href="route('doctor.dashboard')" :current="request()->routeIs('doctor.dashboard')" wire:navigate>
+                            {{ __('Dashboard') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item icon="user" :href="route('doctor.profile')" :current="request()->routeIs('doctor.profile')" wire:navigate>
+                            {{ __('Profile') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item icon="document-text" :href="route('doctor.invoices')" :current="request()->routeIs('doctor.invoices')" wire:navigate>
+                            {{ __('Invoices & shares') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item icon="banknotes" :href="route('doctor.payouts')" :current="request()->routeIs('doctor.payouts')" wire:navigate>
+                            {{ __('Payouts') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item icon="calendar-days" :href="route('doctor.appointments')" :current="request()->routeIs('doctor.appointments')" wire:navigate>
+                            {{ __('Appointments & queue') }}
+                        </flux:sidebar.item>
+                    </flux:sidebar.group>
+                @endif
+
                 @if(auth()->user()?->role === \App\Enums\UserRole::Admin)
                     <flux:sidebar.group :heading="__('Tools')" class="grid">
                         <flux:sidebar.item icon="printer" :href="route('admin.printed')" :current="request()->routeIs('admin.printed')" wire:navigate>
@@ -33,9 +53,13 @@
                         <flux:sidebar.item icon="command-line" :href="route('tinker')" :current="request()->routeIs('tinker')" wire:navigate>
                             {{ __('Tinker') }}
                         </flux:sidebar.item>
+                        <flux:sidebar.item icon="users" :href="route('admin.accounts')" :current="request()->routeIs('admin.accounts')" wire:navigate>
+                            {{ __('Accounts') }}
+                        </flux:sidebar.item>
                     </flux:sidebar.group>
                 @endif
 
+                @if(in_array(auth()->user()?->role, [\App\Enums\UserRole::Admin, \App\Enums\UserRole::Staff]))
                 <flux:sidebar.group :heading="__('Reception')" class="grid">
                     <flux:sidebar.item icon="clock" :href="route('reception.shift')" :current="request()->routeIs('reception.shift')" wire:navigate>
                         {{ __('Shift') }}
@@ -55,7 +79,11 @@
                     <flux:sidebar.item icon="banknotes" :href="route('reception.payout')" :current="request()->routeIs('reception.payout')" wire:navigate>
                         {{ __('Doctor payout') }}
                     </flux:sidebar.item>
+                    <flux:sidebar.item icon="magnifying-glass" :href="route('reception.mr-lookup')" :current="request()->routeIs('reception.mr-lookup')" wire:navigate>
+                        {{ __('MR lookup') }}
+                    </flux:sidebar.item>
                 </flux:sidebar.group>
+                @endif
             </flux:sidebar.nav>
             <flux:sidebar.spacer />
 

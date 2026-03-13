@@ -28,6 +28,7 @@ class InvoiceReceiptTemplate extends AbstractReceiptTemplate
 
         $patient = $invoice->visit?->patient;
         $out .= 'Patient: '.($patient?->name ?? '—')."\n";
+        $out .= 'MR#: '.($patient?->mr_number ?? '—')."\n";
         $phone = $patient?->family?->phone ?? '';
         if ($phone !== '') {
             $out .= 'Phone: '.$phone."\n";
@@ -67,8 +68,14 @@ class InvoiceReceiptTemplate extends AbstractReceiptTemplate
             $out .= '#'.$tokenNum.'    Rs '.number_format($invSvc->final_amount)."\n\n";
         }
 
-        $out .= "bp:                  temp:\n";
+        return $out;
+    }
 
+    protected function getSmallBodyContent(): string
+    {
+        $hasDoc1Service1 = $this->invoice->invoiceServices->contains(fn ($invSvc) => (int) ($invSvc->servicePrice?->doctor_id ?? 0) === 1 && (int) ($invSvc->servicePrice?->service_id ?? 0) === 1);
+
+        $out = "bp:                  temp:\n";
         if ($hasDoc1Service1) {
             $out .= "Rx:\n\n\n\n\n\n";
         }
