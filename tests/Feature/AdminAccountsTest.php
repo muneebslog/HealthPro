@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\UserRole;
+use App\Models\Doctor;
 use App\Models\User;
 use Livewire\Livewire;
 
@@ -50,4 +51,28 @@ test('admin cannot change their own role away from admin', function () {
         ->assertOk();
 
     expect($admin->fresh()->role)->toBe(UserRole::Admin);
+});
+
+test('admin can attach doctor to user with doc role', function () {
+    $admin = User::factory()->admin()->create();
+    $doctorUser = User::factory()->create(['role' => UserRole::Doc]);
+    $doctor = Doctor::factory()->create(['status' => 'active', 'user_id' => null]);
+    $this->actingAs($admin);
+
+    Livewire::test('pages::accounts')
+        ->set('roleSelections.'.$doctorUser->id, 'doc')
+        ->set('doctorSelections.'.$doctorUser->id, (string) $doctor->id)
+        ->assertOk();
+
+    expect($doctor->fresh()->user_id)->toBe($doctorUser->id);
+});
+
+test('doctor select is shown when role is doc', function () {
+    $admin = User::factory()->admin()->create();
+    $doctorUser = User::factory()->create(['role' => UserRole::Doc]);
+    $doctor = Doctor::factory()->create(['status' => 'active']);
+    $this->actingAs($admin);
+
+    $component = Livewire::test('pages::accounts');
+    $component->assertSee($doctor->name);
 });

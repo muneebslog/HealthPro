@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\UserRole;
+use App\Models\Doctor;
 use App\Models\User;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
@@ -13,17 +14,29 @@ new class extends Component
      */
     public array $roleSelections = [];
 
+    /**
+     * @var array<int, string>
+     */
+    public array $doctorSelections = [];
+
     public function mount(): void
     {
         foreach ($this->users as $user) {
             $this->roleSelections[$user->id] = $user->role->value;
+            $this->doctorSelections[$user->id] = (string) ($user->doctor?->id ?? '');
         }
     }
 
     #[Computed]
     public function users(): Collection
     {
-        return User::query()->orderBy('name')->get();
+        return User::query()->with('doctor')->orderBy('name')->get();
+    }
+
+    #[Computed]
+    public function doctors(): Collection
+    {
+        return Doctor::query()->where('status', 'active')->orderBy('name')->get();
     }
 
     public function updatedRoleSelections(): void
@@ -34,6 +47,21 @@ new class extends Component
                 continue;
             }
             $this->updateRole((int) $userId, $roleValue);
+        }
+    }
+
+    public function updatedDoctorSelections(): void
+    {
+        foreach ($this->doctorSelections as $userId => $doctorId) {
+            $role = $this->roleSelections[$userId] ?? null;
+            if ($role !== UserRole::Doc->value) {
+                continue;
+            }
+            $user = User::find($userId);
+            if (! $user) {
+                continue;
+            }
+            $this->attachDoctor((int) $userId, $doctorId !== '' ? (int) $doctorId : null);
         }
     }
 
@@ -55,7 +83,26 @@ new class extends Component
             return;
         }
 
+        if ($user->role === UserRole::Doc && $role !== UserRole::Doc->value) {
+            Doctor::query()->where('user_id', $userId)->update(['user_id' => null]);
+            $this->doctorSelections[$userId] = '';
+        }
+
         $user->update(['role' => UserRole::from($role)]);
+    }
+
+    public function attachDoctor(int $userId, ?int $doctorId): void
+    {
+        $user = User::find($userId);
+        if (! $user || $user->role !== UserRole::Doc) {
+            return;
+        }
+
+        Doctor::query()->where('user_id', $userId)->update(['user_id' => null]);
+
+        if ($doctorId !== null) {
+            Doctor::query()->where('id', $doctorId)->update(['user_id' => $userId]);
+        }
     }
 };
 ?>
@@ -72,6 +119,7 @@ new class extends Component
                                 <th class="px-5 py-4 text-xs font-semibold uppercase text-zinc-500 dark:text-zinc-400">{{ __('Name') }}</th>
                                 <th class="px-5 py-4 text-xs font-semibold uppercase text-zinc-500 dark:text-zinc-400">{{ __('Email') }}</th>
                                 <th class="px-5 py-4 text-xs font-semibold uppercase text-zinc-500 dark:text-zinc-400">{{ __('Role') }}</th>
+                                <th class="px-5 py-4 text-xs font-semibold uppercase text-zinc-500 dark:text-zinc-400">{{ __('Doctor') }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-zinc-100 dark:divide-zinc-700/50">
@@ -80,6 +128,7 @@ new class extends Component
                                     <td class="px-5 py-4"><flux:skeleton.line class="w-32" /></td>
                                     <td class="px-5 py-4"><flux:skeleton.line class="w-48" /></td>
                                     <td class="px-5 py-4"><flux:skeleton.line class="w-20" /></td>
+                                    <td class="px-5 py-4"><flux:skeleton.line class="w-24" /></td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -110,6 +159,9 @@ new class extends Component
                         </th>
                         <th class="px-5 py-4 text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
                             {{ __('Role') }}
+                        </th>
+                        <th class="px-5 py-4 text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                            {{ __('Doctor') }}
                         </th>
                     </tr>
                 </thead>
@@ -145,10 +197,25 @@ new class extends Component
                                     </flux:select>
                                 @endif
                             </td>
+                            <td class="px-5 py-4">
+                                @if (($roleSelections[$user->id] ?? $user->role->value) === 'doc')
+                                    <flux:select
+                                        wire:model.live="doctorSelections.{{ $user->id }}"
+                                        class="min-w-40"
+                                    >
+                                        <flux:select.option value="">{{ __('— None —') }}</flux:select.option>
+                                        @foreach ($this->doctors as $doctor)
+                                            <flux:select.option value="{{ $doctor->id }}">{{ $doctor->name }}</flux:select.option>
+                                        @endforeach
+                                    </flux:select>
+                                @else
+                                    <span class="text-sm text-zinc-500 dark:text-zinc-400">—</span>
+                                @endif
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="3" class="px-5 py-12 text-center text-zinc-500 dark:text-zinc-400">
+                            <td colspan="4" class="px-5 py-12 text-center text-zinc-500 dark:text-zinc-400">
                                 {{ __('No users.') }}
                             </td>
                         </tr>

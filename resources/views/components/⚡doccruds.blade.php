@@ -32,9 +32,9 @@ new class extends Component {
     #[Rule('boolean')]
     public bool $is_on_payroll = false;
 
-    /** Payout interval in days for share-based doctors (e.g. 7, 15, 30). */
-    #[Rule('nullable|integer|in:7,15,30')]
-    public ?int $payout_duration = null;
+    /** Payout interval in days for share-based doctors (e.g. 1, 7, 15, 30). */
+    #[Rule('nullable|integer|min:1|max:365')]
+    public string|int|null $payout_duration = null;
 
     #[Rule('required|in:active,left,on_leave')]
     public string $status = 'active';
@@ -98,12 +98,16 @@ new class extends Component {
             ]);
         }
 
+        $payoutDuration = $this->is_on_payroll
+            ? null
+            : (is_numeric($this->payout_duration) ? (int) $this->payout_duration : null);
+
         $data = [
             'name' => $this->name,
             'specialization' => $this->specialization,
             'phone' => $this->phone ?: null,
             'is_on_payroll' => $this->is_on_payroll,
-            'payout_duration' => $this->is_on_payroll ? null : $this->payout_duration,
+            'payout_duration' => $payoutDuration,
             'status' => $this->status,
         ];
 
@@ -404,13 +408,9 @@ new class extends Component {
 
                     @if (! $is_on_payroll)
                         <div>
-                            <label class="hms-label">Payout duration <span style="color:#484f58;text-transform:none;">(share-based)</span></label>
-                            <select wire:model="payout_duration" class="hms-input">
-                                <option value="">— Select —</option>
-                                <option value="7">Weekly (7 days)</option>
-                                <option value="15">Every 15 days</option>
-                                <option value="30">Monthly (30 days)</option>
-                            </select>
+                            <label class="hms-label">Payout duration (days) <span style="color:#484f58;text-transform:none;">(share-based)</span></label>
+                            <input wire:model="payout_duration" type="number" min="1" max="365" class="hms-input"
+                                placeholder="e.g. 7, 15, 30">
                             @error('payout_duration') <p class="mt-1 text-xs" style="color:var(--danger);">{{ $message }}</p> @enderror
                         </div>
                     @endif
