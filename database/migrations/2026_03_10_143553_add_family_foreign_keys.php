@@ -23,7 +23,6 @@ return new class extends Migration
     {
         Schema::table('families', function (Blueprint $table) {
             $table->dropForeign(['head_id']);
-            $table->dropForeign(['patient_id']);
         });
     }
 };

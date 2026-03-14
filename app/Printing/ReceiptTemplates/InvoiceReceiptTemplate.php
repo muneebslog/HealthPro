@@ -144,7 +144,7 @@ class InvoiceReceiptTemplate extends AbstractReceiptTemplate
 
         $out = "bp:                  temp:\n";
         if ($hasDoc1Service1) {
-            $out .= "Rx:\n\n\n\n\n\n";
+            $out .= "Rx:\n\n\n\n\n\n\n\n\n\n\n";
         }
 
         return $out;
