@@ -90,7 +90,7 @@ class InvoiceReceiptTemplate extends AbstractReceiptTemplate
             $mrNumber = $patient->mr_number;
         }
 
-        $out .= 'Patient: '.($patient?->name ?? '—')."\n";
+        $out .= 'Patient: '.($patient?->name ?? '—')."\n\n";
         $out .= 'MR#: '.($mrNumber ?? '—')."\n";
         $phone = $patient?->family?->phone ?? '';
         if ($phone !== '') {
@@ -128,7 +128,7 @@ class InvoiceReceiptTemplate extends AbstractReceiptTemplate
                     && (int) ($q->doctor_id ?? 0) === (int) ($sp->doctor_id ?? 0);
             });
             $tokenNum = $token ? (string) $token->token_number : '—';
-            $out .= '#'.$tokenNum.'    Rs '.number_format($invSvc->final_amount)."\n\n";
+            $out .= '\n'.'Token:#'.$tokenNum.'    Rs '.number_format($invSvc->final_amount)."\n\n";
         }
 
         return $out;
@@ -142,7 +142,7 @@ class InvoiceReceiptTemplate extends AbstractReceiptTemplate
 
         $hasDoc1Service1 = $this->invoice->invoiceServices->contains(fn ($invSvc) => (int) ($invSvc->servicePrice?->doctor_id ?? 0) === 1 && (int) ($invSvc->servicePrice?->service_id ?? 0) === 1);
 
-        $out = "bp:                  temp:\n";
+        $out = "bp:                      temp:\n";
         if ($hasDoc1Service1) {
             $out .= "Rx:\n\n\n\n\n\n\n\n\n\n\n";
         }
